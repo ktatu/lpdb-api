@@ -1,0 +1,25 @@
+{
+    "name": "match-api",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "tsc": "tsc",
+        "start:dev": "tsx --watch ./src/index.ts"
+    },
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "devDependencies": {
+        "typescript": "^5.5.2"
+    },
+    "dependencies": {
+        "@types/express": "^4.17.21",
+        "axios": "^1.7.2",
+        "bullmq": "^5.34.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "ioredis": "^5.4.2",
+        "mongoose": "^8.9.2",
+        "tsx": "^4.15.7"
+    }
+}

@@ -1,6 +1,6 @@
-// should queue be in match endpoint?
 import { Queue, Worker } from "bullmq"
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USERNAME } from "../config"
+
 import { MatchEndpoint } from "../liquipedia_database_api/MatchEndpoint"
 
 const connection = {
@@ -25,7 +25,7 @@ const worker = new Worker(
     async (job) => {
         switch (job.name) {
             case "upcoming_matches":
-                MatchEndpoint.getUpcomingMatches()
+                const matches = MatchEndpoint.getUpcomingMatches()
                 break
             default:
                 break

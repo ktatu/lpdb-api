@@ -9,3 +9,6 @@ export const REDIS_PORT = parseInt(process.env.REDIS_PORT as string) as number
 export const REDIS_HOST = process.env.REDIS_HOST as string
 export const REDIS_USERNAME = process.env.REDIS_USERNAME as string
 export const REDIS_PASSWORD = process.env.REDIS_PASSWORD as string
+
+const SUPPORTED_WIKIS_STR = process.env.SUPPORTED_WIKIS as string
+export const SUPPORTED_WIKIS = SUPPORTED_WIKIS_STR.split(",")

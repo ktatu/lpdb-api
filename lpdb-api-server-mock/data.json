@@ -1,0 +1,18 @@
+[
+    {
+        "wiki": "deadlock",
+        "match2id": "aaa-111",
+        "date": "2025-02-01 15:30:00",
+        "tournament": "Monthly Mayhem 25",
+        "liquipediatier": 1,
+        "shouldnotbefetched": "test2"
+    },
+    {
+        "wiki": "counterstrike",
+        "match2id": "aaa-222",
+        "date": "2025-02-01 18:30:00",
+        "tournament": "Weekly Cup 5",
+        "liquipediatier": 4,
+        "shouldnotbefetched": "test1"
+    }
+]

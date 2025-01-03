@@ -1,0 +1,2 @@
+GET http://localhost:3005/match?wiki=deadlock%7Ccounterstrike&query=date%2C%20match2id%2C%20tournament%2C%20liquipediatier&limit=1 HTTP/1.1
+Authorization: Apikey123

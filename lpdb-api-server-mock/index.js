@@ -10,9 +10,11 @@ const FAKE_API_KEY = "apikey123"
 
 const args = process.argv.slice(2)
 let ratelimitMsg = ""
+let rateLimitEnabled = false
 let latestQueryTimestamp = 0
 
 if (args[0] && args[0] === "ratelimit") {
+    rateLimitEnabled = true
     ratelimitMsg = "Rate limit of 1 query per minute enabled."
 }
 
@@ -21,7 +23,8 @@ app.get("/healthcheck", (req, res) => {
 })
 
 app.get("/match", (req, res) => {
-    if (rateLimitIsReached()) {
+    if (rateLimitEnabled && rateLimitIsReached()) {
+        console.log("too many requests")
         return res.status(429).json({ error: ["Rate limit exceeded"] })
     }
 

@@ -9,6 +9,8 @@ export const parse = (queryObj) => {
     const datapoints = parseDatapoints(queryObj.query)
     const limit = parseLimit(queryObj.limit)
 
+    appendObligatoryDatapoints(datapoints)
+
     return { wikis: wikis, datapoints: datapoints, limit: limit }
 }
 
@@ -34,6 +36,11 @@ const parseLimit = (limitStr) => {
     }
 
     return parseInt(limitStr)
+}
+
+// these are always added to query responses even when not requested by client
+const appendObligatoryDatapoints = (datapoints) => {
+    datapoints.push("wiki", "pagename")
 }
 
 const errorMsg = (missingParam) => `Parameter missing: ${missingParam}`

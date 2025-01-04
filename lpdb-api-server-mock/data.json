@@ -1,6 +1,8 @@
 [
     {
         "wiki": "deadlock",
+        "pagename": "monthly_mayhem_5",
+        "namespace": 0,
         "match2id": "aaa-111",
         "date": "2025-02-01 15:30:00",
         "tournament": "Monthly Mayhem 25",
@@ -9,6 +11,8 @@
     },
     {
         "wiki": "counterstrike",
+        "pagename": "weekly_cup_5",
+        "namespace": 0,
         "match2id": "aaa-222",
         "date": "2025-02-01 18:30:00",
         "tournament": "Weekly Cup 5",

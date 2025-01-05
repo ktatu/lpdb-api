@@ -1,6 +1,6 @@
 import axios from "axios"
 import { LPDB_API_KEY, LPDB_API_URL } from "../config"
-import { QueryParams } from "../types"
+import { LPDBResponse, QueryParams } from "../types"
 
 const client = axios.create({
     baseURL: LPDB_API_URL,
@@ -14,34 +14,36 @@ const client = axios.create({
 })
 
 const buildQueryString = (queryParams: Record<string, any>) => {
-    const wikis = `wiki=${encodeURIComponent(queryParams.wiki.toString().replaceAll(",", "|"))}`
-    const conditions = `conditions=${encodeURIComponent(
-        queryParams.conditions.toString().replaceAll(",", " AND ")
-    )}`
-    const datapoints = `query=${encodeURIComponent(queryParams.datapoints.toString())}`
-    const limit = `limit=${queryParams.limit || 20}`
+    const queryParts = [
+        `wiki=${encodeURIComponent(queryParams.wiki.toString().replaceAll(",", "|"))}`,
+        `conditions=${encodeURIComponent(
+            queryParams.conditions.toString().replaceAll(",", " AND ")
+        )}`,
+        `query=${encodeURIComponent(queryParams.datapoints.toString())}`,
+        `limit=${queryParams.limit || 20}`,
+    ]
 
-    const query = `${wikis}&${conditions}&${datapoints}&${limit}`
-
-    return query
+    return queryParts.join("&")
 }
-
-client.interceptors.response.use((res) => {
-    if (res.data.warning) {
-        console.log("Warning in lpdb response: ", res.data.warning)
-    }
-    if (res.data.error) {
-        console.log("Error in lpdp response: ", res.data.error)
-    }
-
-    const newRes = { ...res, data: res.data.result }
-    return newRes
-})
 
 export const queryApi = async (endpoint: string, queryParams: QueryParams) => {
     try {
-        const res = await client.get(endpoint, { params: queryParams })
+        const res = await client.get<LPDBResponse>(endpoint, { params: queryParams })
+
+        logAdditionalResponseInfo(res.data)
+
+        return res.data.result || []
     } catch (error) {
         console.log(error)
+        return []
+    }
+}
+
+const logAdditionalResponseInfo = (resData: LPDBResponse) => {
+    if (resData?.warning) {
+        console.log("Warning in lpdb response: ", resData.warning)
+    }
+    if (resData?.error) {
+        console.log("Error in lpdp response: ", resData.error)
     }
 }

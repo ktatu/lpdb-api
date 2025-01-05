@@ -32,7 +32,8 @@ export class MatchEndpoint {
 
         //params.conditions = this.addDateInterval(params.conditions)
 
-        const rawMatchesData = await this.getMatchData(params)
+        const rawMatchData = await this.getMatchData(params)
+        return rawMatchData
     }
 
     private static addDateInterval(conditions: Array<string>) {
@@ -41,7 +42,7 @@ export class MatchEndpoint {
         const d = new Date(Date.now() + dayInMilliseconds)
         const dateMin = `[[date::>${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}]]`
 
-        const d2 = new Date(Date.now() + dayInMilliseconds * 2) // adding 24 hours
+        const d2 = new Date(Date.now() + dayInMilliseconds * 2)
         const dateMax = `[[date::<${d2.getFullYear()}-${d2.getMonth() + 1}-${d2.getDate()}]]`
 
         return conditions.concat([dateMin, dateMax])
@@ -50,10 +51,10 @@ export class MatchEndpoint {
     private static async getMatchData(queryParams: QueryParams) {
         await this.rateLimiter.enforceLimit()
 
-        await queryApi(this.ENDPOINT_NAME, queryParams)
+        const rawMatchData = await queryApi(this.ENDPOINT_NAME, queryParams)
 
         this.rateLimiter.setNewEnforcementTimestamp()
 
-        return 0
+        return rawMatchData
     }
 }

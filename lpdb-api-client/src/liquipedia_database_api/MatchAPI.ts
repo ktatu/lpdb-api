@@ -1,3 +1,4 @@
+import merge from "lodash.mergewith"
 import { SUPPORTED_WIKIS } from "../config"
 import { QueryParams } from "../types"
 import { queryApi } from "./client"
@@ -7,21 +8,48 @@ export class MatchAPI {
     private static rateLimiter: RateLimiter = new RateLimiter()
     private static ENDPOINT_NAME = "match"
 
+    private static DEFAULT_PARAMS: QueryParams = {
+        wiki: SUPPORTED_WIKIS,
+        conditions: ["[[dateexact::1]]"],
+        datapoints: [
+            "match2id",
+            "date",
+            //"stream", TODO: handling JSON objects
+            "tournament",
+            "liquipediatier",
+            //"match2opponents",
+        ],
+        limit: 1000,
+    }
+
     /*
     Rate limit may cause queries to pile up
     Queries that use same params can be combined
     */
     private static matchQueryBuffer: Array<string>
 
-    static async getMatches(additionalParams?: QueryParams) {
-        let params = structuredClone(defaultParams)
+    static async getMatches(extraParams?: QueryParams) {
+        let params = structuredClone(this.DEFAULT_PARAMS)
 
-        if (additionalParams) {
-            // add additionalParams to params
+        if (extraParams) {
+            this.appendExtraParams(params, extraParams)
+            console.log(params)
         }
 
         const matches = await this.fetchMatches(params)
         return matches
+    }
+
+    private static appendExtraParams(params: QueryParams, extraParams: QueryParams) {
+        merge(params, extraParams, mergeArrays)
+
+        // complains about all paths not returning a value, not needed: https://lodash.com/docs/4.17.15#mergeWith
+        // @ts-ignore
+        function mergeArrays(valueFromParams: unknown, valueFromExtraParams: unknown) {
+            if (Array.isArray(valueFromParams) && Array.isArray(valueFromExtraParams)) {
+                return valueFromParams.concat(valueFromExtraParams)
+            }
+        }
     }
 
     private static async fetchMatches(params: QueryParams) {
@@ -39,18 +67,4 @@ export class MatchAPI {
 
         return conditions.concat([dateMin, dateMax])
     }
-}
-
-const defaultParams: QueryParams = {
-    wiki: SUPPORTED_WIKIS,
-    conditions: ["[[dateexact::1]]"],
-    datapoints: [
-        "match2id",
-        "date",
-        //"stream", TODO: handling JSON objects
-        "tournament",
-        "liquipediatier",
-        //"match2opponents",
-    ],
-    limit: 1000,
 }

@@ -2,8 +2,9 @@ import { Queue, Worker } from "bullmq"
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USERNAME } from "../config"
 import { MatchAPI } from "../liquipedia_database_api/MatchAPI"
 import Match from "../mongodb/Match"
+import { QueryParams } from "../types"
 
-const CRON_PATTERN_EVERY_DAY = "* * 1 * * *"
+const CRON_PATTERN_EVERY_DAY = "1 * * * * *"
 
 const connection = {
     host: REDIS_HOST,
@@ -19,15 +20,19 @@ const queue = new Queue("match", {
 queue.upsertJobScheduler(
     "upcoming_matches",
     { pattern: CRON_PATTERN_EVERY_DAY },
-    { name: "upcoming_matches" }
-)
+    {
+        name: "upcoming_matches",
+        data: { params: { conditions: ["[[date::>2024-01-01]]", "[[date::<2026-01-01]]"] } },
+    }
+) //conditions: ["[[date::>2024-01-01]]", "[[date::<2026-01-01]]"]
 
 const worker = new Worker(
     "match",
     async (job) => {
         switch (job.name) {
             case "upcoming_matches":
-                const matches = await MatchAPI.getMatches()
+                const params = job.data.params as QueryParams
+                const matches = await MatchAPI.getMatches(params)
 
                 await Match.updateAndSaveMatches(matches)
                 /*

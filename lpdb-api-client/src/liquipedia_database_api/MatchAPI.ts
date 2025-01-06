@@ -13,7 +13,6 @@ export class MatchAPI {
     */
     private static matchQueryBuffer: Array<string>
 
-    // jos tämä olisi vaan getMatches() joka saa parametrina objektin jossa on muut tarvittavat parametrit?
     static async getMatches(additionalParams?: QueryParams) {
         let params = structuredClone(defaultParams)
 
@@ -21,8 +20,12 @@ export class MatchAPI {
             // add additionalParams to params
         }
 
-        const rawMatchData = await this.getMatchData(params)
-        return rawMatchData
+        const matches = await this.fetchMatches(params)
+        return matches
+    }
+
+    private static async fetchMatches(params: QueryParams) {
+        return await this.rateLimiter.limitWrapper(queryApi, this.ENDPOINT_NAME, params)
     }
 
     private static addDateInterval(conditions: Array<string>) {
@@ -35,16 +38,6 @@ export class MatchAPI {
         const dateMax = `[[date::<${d2.getFullYear()}-${d2.getMonth() + 1}-${d2.getDate()}]]`
 
         return conditions.concat([dateMin, dateMax])
-    }
-
-    private static async getMatchData(queryParams: QueryParams) {
-        await this.rateLimiter.enforceLimit()
-
-        const rawMatchData = await queryApi(this.ENDPOINT_NAME, queryParams)
-
-        this.rateLimiter.setNewEnforcementTimestamp()
-
-        return rawMatchData
     }
 }
 

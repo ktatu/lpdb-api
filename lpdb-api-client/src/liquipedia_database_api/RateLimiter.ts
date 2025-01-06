@@ -10,6 +10,16 @@ export class RateLimiter {
     */
     private lastEnforcementTimestamp: number = Date.now()
 
+    async limitWrapper(func: (...funcArgs: any) => Promise<any>, ...funcArgs: any) {
+        await this.enforceLimit()
+
+        const queryData = await func(...funcArgs)
+
+        this.setNewEnforcementTimestamp()
+
+        return queryData
+    }
+
     // call before work that needs to be rate limited
     async enforceLimit() {
         const timeoutDuration = Math.max(0, this.timeSinceLastEnforcement())

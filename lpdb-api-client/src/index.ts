@@ -1,7 +1,7 @@
 import express from "express"
 import { connect } from "mongoose"
 import { MONGODB_PASSWORD, MONGODB_URI, MONGODB_USERNAME } from "./config"
-import "./jobs/queue"
+import JobQueue from "./jobs/queue"
 
 const app = express()
 
@@ -16,4 +16,6 @@ app.listen(PORT, async () => {
     } catch (err: unknown) {
         console.log("Failed connecting to mongodb")
     }
+
+    JobQueue.initialize()
 })

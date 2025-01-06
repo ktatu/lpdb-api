@@ -6,13 +6,13 @@ export interface QueryParams {
 }
 
 export interface LPDBResponse {
-    result: Array<Match>
+    result: Array<IMatch>
     error?: Array<string>
     warning?: Array<string>
 }
 
 // TODO: stream and match2opponents
-export interface Match {
+export interface IMatch {
     match2id: string
     date: Date
     //stream: JSON

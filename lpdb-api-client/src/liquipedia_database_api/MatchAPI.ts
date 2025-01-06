@@ -3,7 +3,7 @@ import { QueryParams } from "../types"
 import { queryApi } from "./client"
 import { RateLimiter } from "./RateLimiter"
 
-export class MatchEndpoint {
+export class MatchAPI {
     private static rateLimiter: RateLimiter = new RateLimiter()
     private static ENDPOINT_NAME = "match"
 

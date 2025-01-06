@@ -1,6 +1,6 @@
 import { Queue, Worker } from "bullmq"
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USERNAME } from "../config"
-import { MatchEndpoint } from "../liquipedia_database_api/MatchEndpoint"
+import { MatchAPI } from "../liquipedia_database_api/MatchAPI"
 import Match from "../mongodb/Match"
 
 const CRON_PATTERN_EVERY_DAY = "* * 1 * * *"
@@ -27,7 +27,7 @@ const worker = new Worker(
     async (job) => {
         switch (job.name) {
             case "upcoming_matches":
-                const matches = await MatchEndpoint.getMatches()
+                const matches = await MatchAPI.getMatches()
 
                 await Match.updateAndSaveMatches(matches)
                 /*

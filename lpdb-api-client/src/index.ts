@@ -1,7 +1,7 @@
 import express from "express"
 import { connect } from "mongoose"
 import { MONGODB_PASSWORD, MONGODB_URI, MONGODB_USERNAME } from "./config"
-import JobQueue from "./jobs/queue"
+import JobQueue from "./jobs/JobQueue"
 
 const app = express()
 

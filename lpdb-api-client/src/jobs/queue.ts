@@ -1,17 +1,10 @@
 import { Queue, Worker } from "bullmq"
-import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USERNAME } from "../config"
 import { MatchAPI } from "../liquipedia_database_api/MatchAPI"
 import Match from "../mongodb/Match"
+import connection from "../redis"
 import { QueryParams } from "../types"
 
 const CRON_PATTERN_EVERY_DAY = "1 * * * * *"
-
-const connection = {
-    host: REDIS_HOST,
-    port: REDIS_PORT,
-    username: REDIS_USERNAME,
-    password: REDIS_PASSWORD,
-}
 
 const queue = new Queue("match", {
     connection,

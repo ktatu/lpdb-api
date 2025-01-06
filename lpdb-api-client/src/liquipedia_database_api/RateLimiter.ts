@@ -1,3 +1,5 @@
+import { IMatch } from "../types"
+
 export class RateLimiter {
     // Liquipedia rate limit (per endpoint) is 1 request per minute
     private cooldown: number = 60 //60000
@@ -10,7 +12,7 @@ export class RateLimiter {
     */
     private lastEnforcementTimestamp: number = Date.now()
 
-    async limitWrapper(func: (...funcArgs: any) => Promise<any>, ...funcArgs: any) {
+    async limitWrapper(func: (...funcArgs: any) => Promise<IMatch[]>, ...funcArgs: any) {
         await this.enforceLimit()
 
         const queryData = await func(...funcArgs)

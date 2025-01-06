@@ -28,6 +28,8 @@ export class MatchAPI {
     */
     private static matchQueryBuffer: Array<string>
 
+    private constructor() {}
+
     static async getMatches(extraParams: QueryParams) {
         const params = this.appendExtraParams(structuredClone(this.DEFAULT_PARAMS), extraParams)
         const matches = await this.fetchWithinRateLimit(params)

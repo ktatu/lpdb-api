@@ -15,9 +15,13 @@ queue.upsertJobScheduler(
     { pattern: CRON_PATTERN_EVERY_DAY },
     {
         name: "upcoming_matches",
-        data: { params: { conditions: ["[[date::>2024-01-01]]", "[[date::<2026-01-01]]"] } },
+        data: {
+            params: {
+                conditions: ["[[dateexact::1]]", "[[date::>2024-01-01]]", "[[date::<2026-01-01]]"],
+            },
+        },
     }
-) //conditions: ["[[date::>2024-01-01]]", "[[date::<2026-01-01]]"]
+)
 
 const worker = new Worker(
     "match",

@@ -10,7 +10,7 @@ export class MatchAPI {
 
     private static DEFAULT_PARAMS: QueryParams = {
         wiki: SUPPORTED_WIKIS,
-        conditions: ["[[dateexact::1]]"],
+        conditions: [],
         datapoints: [
             "match2id",
             "date",
@@ -28,34 +28,32 @@ export class MatchAPI {
     */
     private static matchQueryBuffer: Array<string>
 
-    static async getMatches(extraParams?: QueryParams) {
-        let params = structuredClone(this.DEFAULT_PARAMS)
+    static async getMatches(extraParams: QueryParams) {
+        const params = this.appendExtraParams(structuredClone(this.DEFAULT_PARAMS), extraParams)
+        const matches = await this.fetchWithinRateLimit(params)
 
-        if (extraParams) {
-            this.appendExtraParams(params, extraParams)
-            console.log(params)
-        }
-
-        const matches = await this.fetchMatches(params)
         return matches
     }
 
     private static appendExtraParams(params: QueryParams, extraParams: QueryParams) {
-        merge(params, extraParams, mergeArrays)
+        merge(params, extraParams, this.mergeArrays)
 
-        // complains about all paths not returning a value, not needed: https://lodash.com/docs/4.17.15#mergeWith
-        // @ts-ignore
-        function mergeArrays(valueFromParams: unknown, valueFromExtraParams: unknown) {
-            if (Array.isArray(valueFromParams) && Array.isArray(valueFromExtraParams)) {
-                return valueFromParams.concat(valueFromExtraParams)
-            }
-        }
+        return params
     }
 
-    private static async fetchMatches(params: QueryParams) {
+    private static mergeArrays(valueFromParams: unknown, valueFromExtraParams: unknown) {
+        if (Array.isArray(valueFromParams) && Array.isArray(valueFromExtraParams)) {
+            return valueFromParams.concat(valueFromExtraParams)
+        }
+
+        return undefined
+    }
+
+    private static async fetchWithinRateLimit(params: QueryParams) {
         return await this.rateLimiter.limitWrapper(queryApi, this.ENDPOINT_NAME, params)
     }
-
+}
+/*
     private static addDateInterval(conditions: Array<string>) {
         const dayInMilliseconds = 86400000
 
@@ -67,4 +65,4 @@ export class MatchAPI {
 
         return conditions.concat([dateMin, dateMax])
     }
-}
+*/

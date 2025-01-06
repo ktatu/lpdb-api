@@ -27,7 +27,7 @@ const worker = new Worker(
     async (job) => {
         switch (job.name) {
             case "upcoming_matches":
-                const matches = await MatchEndpoint.getUpcomingMatches()
+                const matches = await MatchEndpoint.getMatches()
 
                 await Match.updateAndSaveMatches(matches)
                 /*
@@ -35,6 +35,8 @@ const worker = new Worker(
                 new jobs need to be created for each match to check for updates
                 job with children that are also update checks? (check bullmq docs)
                 */
+                break
+            case "update_match":
                 break
             default:
                 break

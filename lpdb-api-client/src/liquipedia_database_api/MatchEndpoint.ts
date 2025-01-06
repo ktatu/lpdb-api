@@ -13,24 +13,13 @@ export class MatchEndpoint {
     */
     private static matchQueryBuffer: Array<string>
 
-    static async getUpcomingMatches() {
-        const params: QueryParams = {
-            wiki: SUPPORTED_WIKIS,
-            conditions: ["[[dateexact::1]]"],
-            datapoints: [
-                "match2id",
-                "date",
-                //"stream", TODO: handling JSON objects
-                "tournament",
-                "liquipediatier",
-                //"match2opponents",
-            ],
-            limit: 1000,
+    // jos tämä olisi vaan getMatches() joka saa parametrina objektin jossa on muut tarvittavat parametrit?
+    static async getMatches(additionalParams?: QueryParams) {
+        let params = structuredClone(defaultParams)
+
+        if (additionalParams) {
+            // add additionalParams to params
         }
-
-        console.log("querying matches")
-
-        //params.conditions = this.addDateInterval(params.conditions)
 
         const rawMatchData = await this.getMatchData(params)
         return rawMatchData
@@ -57,4 +46,18 @@ export class MatchEndpoint {
 
         return rawMatchData
     }
+}
+
+const defaultParams: QueryParams = {
+    wiki: SUPPORTED_WIKIS,
+    conditions: ["[[dateexact::1]]"],
+    datapoints: [
+        "match2id",
+        "date",
+        //"stream", TODO: handling JSON objects
+        "tournament",
+        "liquipediatier",
+        //"match2opponents",
+    ],
+    limit: 1000,
 }

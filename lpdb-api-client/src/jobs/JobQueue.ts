@@ -32,9 +32,10 @@ class JobQueue {
             async (job) => {
                 switch (job.name) {
                     case "upcoming_matches":
-                        const params = job.data.params as QueryParams
-                        const matches = await MatchAPI.getMatches(params)
+                        let params = job.data.params as QueryParams
+                        this.addDateParamsForMatchesTomorrow(params)
 
+                        const matches = await MatchAPI.getMatches(params)
                         //await Match.updateAndSaveMatches(matches)
 
                         matches.forEach((match) =>
@@ -65,11 +66,7 @@ class JobQueue {
                 name: "upcoming_matches",
                 data: {
                     params: {
-                        conditions: [
-                            "[[dateexact::1]]",
-                            "[[date::>2024-01-01]]",
-                            "[[date::<2026-01-01]]",
-                        ],
+                        conditions: ["[[dateexact::1]]"],
                     },
                 },
             }
@@ -80,7 +77,16 @@ class JobQueue {
         console.log(date)
     }
 
-    private static dateMinusOneHour(date: Date) {}
+    private static addDateParamsForMatchesTomorrow(params: QueryParams) {
+        const oneDayInMilliseconds = 86400000
+        const dateMin = new Date(Date.now() + oneDayInMilliseconds)
+        const dateMax = new Date(Date.now() + oneDayInMilliseconds * 2)
+
+        const minParam = `[[date::>${dateMin.toISOString()}]]`
+        const maxParam = `[[date::<${dateMax.toISOString()}]]`
+
+        params.conditions.push(minParam, maxParam)
+    }
 }
 
 export default JobQueue

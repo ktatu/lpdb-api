@@ -1,6 +1,7 @@
 import merge from "lodash.mergewith"
+import { z } from "zod"
 import { SUPPORTED_WIKIS } from "../config"
-import { QueryParams } from "../types"
+import { IMatch, QueryParams } from "../types"
 import { queryApi } from "./client"
 import { RateLimiter } from "./RateLimiter"
 
@@ -10,7 +11,7 @@ export class MatchAPI {
 
     private static DEFAULT_PARAMS: QueryParams = {
         wiki: SUPPORTED_WIKIS,
-        conditions: [],
+        conditions: ["[[namespace::0]]"],
         datapoints: [
             "match2id",
             "date",
@@ -32,9 +33,17 @@ export class MatchAPI {
 
     static async getMatches(extraParams: QueryParams) {
         const params = this.appendExtraParams(structuredClone(this.DEFAULT_PARAMS), extraParams)
-        const matches = await this.fetchWithinRateLimit(params)
+        const rawMatchesData = await this.fetchWithinRateLimit(params)
 
-        return matches
+        let parsedData: Array<IMatch> = []
+
+        try {
+            parsedData = this.parseMatches(rawMatchesData)
+        } catch (error) {
+            console.log(error)
+        }
+
+        return parsedData
     }
 
     private static appendExtraParams(params: QueryParams, extraParams: QueryParams) {
@@ -53,6 +62,26 @@ export class MatchAPI {
 
     private static async fetchWithinRateLimit(params: QueryParams) {
         return await this.rateLimiter.limitWrapper(queryApi, this.ENDPOINT_NAME, params)
+    }
+
+    private static parseMatches(rawMatchData: unknown) {
+        const matchSchema = z.array(
+            z.object({
+                wiki: z.string(),
+                pagename: z.string(),
+                match2id: z.string(),
+                date: z.string().transform((dateStr) => {
+                    // dates from api arrive as strings in the format (UTC 0): 2025-02-10 23:30:00
+                    // needs to be converted into ISO 8601 format: 2025-02-10T23:30:00Z for Date object
+                    dateStr.replace(" ", "T").concat("Z")
+                    return new Date(dateStr)
+                }),
+                tournament: z.string(),
+                liquipediatier: z.number(),
+            })
+        )
+
+        return matchSchema.parse(rawMatchData)
     }
 }
 /*

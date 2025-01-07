@@ -1,6 +1,6 @@
 import { Queue, Worker } from "bullmq"
 import { MatchAPI } from "../liquipedia_database_api/MatchAPI"
-import Match from "../mongodb/Match"
+//import Match from "../mongodb/Match"
 import connection from "../redis"
 import { QueryParams } from "../types"
 
@@ -19,7 +19,7 @@ class JobQueue {
 
         this.initializeQueue()
         this.initializeWorker()
-        this.createUpcomingMatchesJob()
+        this.scheduleUpcomingMatchesJob()
     }
 
     private static initializeQueue() {
@@ -32,18 +32,17 @@ class JobQueue {
             async (job) => {
                 switch (job.name) {
                     case "upcoming_matches":
-                        console.log("upcoming matches")
                         const params = job.data.params as QueryParams
                         const matches = await MatchAPI.getMatches(params)
 
-                        await Match.updateAndSaveMatches(matches)
-                        /*
-                        TODO HERE:
-                        new jobs need to be created for each match to check for updates
-                        job with children that are also update checks? (check bullmq docs)
-                        */
+                        //await Match.updateAndSaveMatches(matches)
+
+                        matches.forEach((match) =>
+                            this.scheduleUpdateMatchJob(match.match2id, match.date)
+                        )
                         break
                     case "update_match":
+                        console.log("update match job ongoing")
                         break
                     default:
                         break
@@ -53,7 +52,7 @@ class JobQueue {
         )
     }
 
-    private static async createUpcomingMatchesJob() {
+    private static async scheduleUpcomingMatchesJob() {
         const jobId = "upcoming_matches"
         const CRON_PATTERN_EVERY_DAY = "1 * * * * *"
         // Deletion to ensure that the job never gets accidentally duplicated
@@ -76,6 +75,12 @@ class JobQueue {
             }
         )
     }
+
+    private static async scheduleUpdateMatchJob(match2id: string, date: Date) {
+        console.log(date)
+    }
+
+    private static dateMinusOneHour(date: Date) {}
 }
 
 export default JobQueue

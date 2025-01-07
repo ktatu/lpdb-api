@@ -23,12 +23,6 @@ export class MatchAPI {
         limit: 1000,
     }
 
-    /*
-    Rate limit may cause queries to pile up
-    Queries that use same params can be combined
-    */
-    private static matchQueryBuffer: Array<string>
-
     private constructor() {}
 
     static async getMatches(extraParams: QueryParams) {

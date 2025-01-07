@@ -6,7 +6,7 @@ export interface QueryParams {
 }
 
 export interface LPDBResponse {
-    result: Array<IMatch>
+    result: Array<unknown>
     error?: Array<string>
     warning?: Array<string>
 }

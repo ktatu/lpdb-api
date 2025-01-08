@@ -1,18 +1,19 @@
 import { Job, Queue } from "bullmq"
+import { SUPPORTED_WIKIS } from "../config"
 import MatchAPI from "../liquipedia_database_api/MatchAPI"
-import { QueryParams } from "../types"
+import Match from "../mongodb/Match"
+import { IMatch, QueryParams } from "../types"
+import { parseUpcomingMatches } from "./parser"
 
 class UpcomingMatchesJob {
     private static NAME = "upcoming_matches"
     private static JOB_RECURRENCE_CRON_PATTERN = "1 * * * * *"
-    /* TODO: this replaces using params in MatchAPI
     private static DEFAULT_PARAMS: QueryParams = {
         wiki: SUPPORTED_WIKIS,
         conditions: ["[[namespace::0]]", "[[dateexact::1]]"],
-        datapoints: ["match2id", "date", "tournament", "pagename"],
+        datapoints: ["match2id", "date", "stream", "tournament", "liquipediatier"],
         limit: 1000,
     }
-    */
 
     private static queue: Queue
 
@@ -23,27 +24,29 @@ class UpcomingMatchesJob {
         this.enqueue()
     }
 
-    static async execute(job: Job) {
-        let upcomingParams: QueryParams = { conditions: ["[[dateexact::1]]"] } as QueryParams
-        this.addDateParamsForMatchesTomorrow(upcomingParams)
+    static async execute() {
+        const params = structuredClone(this.DEFAULT_PARAMS)
+        this.addDateParamsForMatchesTomorrow(params)
 
-        const matches = await MatchAPI.getMatches(upcomingParams)
-        //await Match.updateAndSaveMatches(matches)
+        const rawMatchesData = await MatchAPI.getMatches(params)
+        const matches = parseUpcomingMatches(rawMatchesData)
 
-        matches.forEach((match) => this.scheduleUpdateMatchJob(match.match2id, match.date))
+        await Match.updateAndSaveMatches(matches)
+
+        this.enqueueMatchUpdates(matches)
     }
 
-    private static scheduleUpdateMatchJob(match2id: string, date: Date) {
-        /*
-        const delay = this.calculateUpdateMatchJobDelay(date)
+    private static enqueueMatchUpdates(matches: Array<IMatch>) {
+        const jobs = matches.map((match) => {
+            const delay = this.calculateUpdateMatchJobDelay(match.date)
+            return new Job(this.queue, "update_match", match, {
+                delay,
+                removeOnComplete: true,
+                removeOnFail: true,
+            })
+        })
 
-        this.queue.add(
-            "update_match",
-            { match2id, params: { conditions: ["[[stream::![]]]"] } },
-            { jobId: match2id, delay }
-        )
-        */
-        console.log("schedule update")
+        this.queue.addBulk(jobs)
     }
 
     private static calculateUpdateMatchJobDelay(date: Date) {
@@ -75,7 +78,7 @@ class UpcomingMatchesJob {
             this.NAME,
             { pattern: this.JOB_RECURRENCE_CRON_PATTERN },
             {
-                name: "upcoming_matches",
+                name: this.NAME,
                 opts: { removeOnComplete: true, removeOnFail: true },
             }
         )

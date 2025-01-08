@@ -32,7 +32,7 @@ class JobQueue {
                 switch (job.name) {
                     case "upcoming_matches":
                         try {
-                            await UpcomingMatchesJob.execute(job)
+                            await UpcomingMatchesJob.execute()
                         } catch (error) {
                             console.error("Unable to execute job: upcoming_matches")
                             console.error(error)

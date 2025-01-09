@@ -1,9 +1,12 @@
 import { Queue, Worker } from "bullmq"
 import connection from "../redis"
-import { QueryParams } from "../types"
+import MatchUpdateJob from "./MatchUpdateJob"
+import PlayerStreamsJob from "./PlayerStreamsJob"
 import UpcomingMatchesJob from "./UpcomingMatchesJob"
 
 class JobQueue {
+    private static readonly JOBS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
+
     private static queue: Queue
     private static worker: Worker
     private static initialized = false
@@ -18,11 +21,14 @@ class JobQueue {
 
         this.initializeQueue()
         this.initializeWorker()
-        UpcomingMatchesJob.initialize(this.queue)
+        this.JOBS.forEach((job) => job.initialize(this.queue))
     }
 
     private static initializeQueue() {
-        this.queue = new Queue("match", { connection })
+        this.queue = new Queue("match", {
+            connection,
+            defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+        })
     }
 
     private static initializeWorker() {
@@ -30,18 +36,29 @@ class JobQueue {
             "match",
             async (job) => {
                 switch (job.name) {
-                    case "upcoming_matches":
+                    case UpcomingMatchesJob.NAME:
                         try {
                             await UpcomingMatchesJob.execute()
                         } catch (error) {
-                            console.error("Unable to execute job: upcoming_matches")
+                            console.error("Unable to execute job: ", UpcomingMatchesJob.NAME)
                             console.error(error)
                         }
                         break
-                    case "update_match":
-                        console.log("update match job ongoing")
-                        let updateParams = job.data.params as QueryParams
-                        // condition for querying matches that have streams: [[stream::![]]]
+                    case MatchUpdateJob.NAME:
+                        try {
+                            await MatchUpdateJob.execute(job)
+                        } catch (error) {
+                            console.error("Unable to execute job: ", MatchUpdateJob.NAME)
+                            console.error(error)
+                        }
+                        break
+                    case PlayerStreamsJob.NAME:
+                        try {
+                            PlayerStreamsJob.execute()
+                        } catch (error) {
+                            console.error("Unable to execute job: ", PlayerStreamsJob.NAME)
+                            console.error(error)
+                        }
                         break
                     default:
                         break

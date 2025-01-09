@@ -8,7 +8,7 @@ class MatchAPI {
 
     private constructor() {}
 
-    static async getMatches(params: QueryParams) {
+    static async getData(params: QueryParams) {
         return await this.rateLimiter.limitWrapper(queryApi, this.ENDPOINT_NAME, params)
     }
 }

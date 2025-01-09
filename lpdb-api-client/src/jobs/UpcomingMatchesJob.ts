@@ -5,13 +5,14 @@ import Match from "../mongodb/Match"
 import { IMatch, QueryParams } from "../types"
 import { parseUpcomingMatches } from "./parser"
 
+// Periodically querying the LPDB API for upcoming matches
 class UpcomingMatchesJob {
-    private static NAME = "upcoming_matches"
-    private static JOB_RECURRENCE_CRON_PATTERN = "1 * * * * *"
-    private static DEFAULT_PARAMS: QueryParams = {
+    static readonly NAME = "upcoming_matches"
+    private static readonly JOB_RECURRENCE_CRON_PATTERN = "1 * * * * *"
+    private static readonly PARAMS: QueryParams = {
         wiki: SUPPORTED_WIKIS,
         conditions: ["[[namespace::0]]", "[[dateexact::1]]"],
-        datapoints: ["match2id", "date", "stream", "tournament", "liquipediatier"],
+        datapoints: ["match2id", "date", "tournament", "liquipediatier"],
         limit: 1000,
     }
 
@@ -21,28 +22,28 @@ class UpcomingMatchesJob {
 
     static initialize(queue: Queue) {
         this.queue = queue
-        this.enqueue()
+        this.enqueueUpcomingMatchesJob()
     }
 
     static async execute() {
-        const params = structuredClone(this.DEFAULT_PARAMS)
+        const params = structuredClone(this.PARAMS)
         this.addDateParamsForMatchesTomorrow(params)
 
-        const rawMatchesData = await MatchAPI.getMatches(params)
+        const rawMatchesData = await MatchAPI.getData(params)
         const matches = parseUpcomingMatches(rawMatchesData)
 
         await Match.updateAndSaveMatches(matches)
 
-        this.enqueueMatchUpdates(matches)
+        this.enqueueMatchUpdateJobs(matches)
     }
 
-    private static enqueueMatchUpdates(matches: Array<IMatch>) {
+    private static enqueueMatchUpdateJobs(matches: Array<IMatch>) {
         const jobs = matches.map((match) => {
             const delay = this.calculateUpdateMatchJobDelay(match.date)
-            return new Job(this.queue, "update_match", match, {
+            const jobData = { wiki: match.wiki, match2id: match.match2id, date: match.date }
+
+            return new Job(this.queue, "update_match", jobData, {
                 delay,
-                removeOnComplete: true,
-                removeOnFail: true,
             })
         })
 
@@ -68,7 +69,7 @@ class UpcomingMatchesJob {
         params.conditions.push(minParam, maxParam)
     }
 
-    private static async enqueue() {
+    private static async enqueueUpcomingMatchesJob() {
         // this can happen if app crashes
         if (await this.jobIsInQueue()) {
             return
@@ -79,7 +80,6 @@ class UpcomingMatchesJob {
             { pattern: this.JOB_RECURRENCE_CRON_PATTERN },
             {
                 name: this.NAME,
-                opts: { removeOnComplete: true, removeOnFail: true },
             }
         )
     }

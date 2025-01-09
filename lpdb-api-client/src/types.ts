@@ -17,4 +17,12 @@ export interface IMatch {
     tournament: string
     wiki: string
     pagename: string
+    liquipediatier: number
+    match2opponents?: Array<Team>
+    stream?: string
+}
+
+export interface Team {
+    name: string
+    match2players: Array<string>
 }

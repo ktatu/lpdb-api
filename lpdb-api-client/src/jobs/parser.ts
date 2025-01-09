@@ -1,7 +1,7 @@
 import { z } from "zod"
 
-const parseUpcomingMatches = (data: unknown) => {
-    const matchSchema = z.array(
+export const parseUpcomingMatches = (data: unknown) => {
+    const schema = z.array(
         z.object({
             wiki: z.string(),
             pagename: z.string(),
@@ -17,7 +17,57 @@ const parseUpcomingMatches = (data: unknown) => {
         })
     )
 
-    return matchSchema.parse(data)
+    return schema.parse(data)
 }
 
-export { parseUpcomingMatches }
+export const parseMatchUpdate = (data: unknown) => {
+    const schema = z.array(
+        z.object({
+            wiki: z.string(),
+            pagename: z.string(),
+            match2id: z.string(),
+            date: z.string().transform((dateStr) => {
+                dateStr.replace(" ", "T").concat("Z")
+                return new Date(dateStr)
+            }),
+            tournament: z.string(),
+            liquipediatier: z.number(),
+            match2opponents: z.array(
+                z.object({
+                    name: z.string(),
+                    match2players: z
+                        .array(z.object({ name: z.string() }))
+                        .transform((players) => players.map((player) => player.name)),
+                })
+            ),
+            stream: z.object({ twitch_en_1: z.string() }).transform((stream) => {
+                return stream.twitch_en_1
+            }),
+        })
+    )
+
+    const matchArray = schema.parse(data)
+
+    // should never happen because MatchUpdate has param condition of limiting num of results to 1
+    if (matchArray.length > 1) {
+        throw new Error(
+            `Parse match update: unexpected number of matches. Expected 1, was: ${matchArray.length}`
+        )
+    }
+
+    // empty array is checked for in MatchUpdateJob
+    return matchArray[0] || []
+}
+
+export const parseUpdateMatchJobData = (data: unknown) => {
+    const schema = z.object({
+        wiki: z.string(),
+        match2id: z.string(),
+        date: z.string().transform((dateStr) => {
+            dateStr.replace(" ", "T").concat("Z")
+            return new Date(dateStr)
+        }),
+    })
+
+    return schema.parse(data)
+}

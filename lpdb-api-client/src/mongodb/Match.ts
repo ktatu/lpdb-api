@@ -11,6 +11,9 @@ const schema = new Schema<IMatch, MatchModel>({
     tournament: { type: String, required: true },
     wiki: { type: String, required: true },
     pagename: { type: String, required: true },
+    liquipediatier: { type: Number, required: true },
+    match2opponents: { type: [Object] },
+    stream: { type: String },
 })
 
 schema.static("updateAndSaveMatches", async function (matches: IMatch[]) {
@@ -22,11 +25,7 @@ schema.static("updateAndSaveMatches", async function (matches: IMatch[]) {
         },
     }))
 
-    try {
-        await this.bulkWrite(operations)
-    } catch (error) {
-        console.log(error)
-    }
+    await this.bulkWrite(operations)
 })
 
 const Match = model<IMatch, MatchModel>("Match", schema)

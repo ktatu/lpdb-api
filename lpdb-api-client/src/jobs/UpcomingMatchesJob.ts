@@ -1,6 +1,6 @@
 import { Job, Queue } from "bullmq"
 import { SUPPORTED_WIKIS } from "../config"
-import MatchAPI from "../liquipedia_database_api/MatchAPI"
+import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
 import { IMatch, QueryParams } from "../types"
 import { parseUpcomingMatches } from "./parser"
@@ -17,11 +17,14 @@ class UpcomingMatchesJob {
     }
 
     private static queue: Queue
+    private static matchAPI: API
 
     private constructor() {}
 
     static initialize(queue: Queue) {
         this.queue = queue
+        this.matchAPI = API.getAPI(APIName.MATCH)
+
         this.enqueueUpcomingMatchesJob()
     }
 
@@ -29,7 +32,8 @@ class UpcomingMatchesJob {
         const params = structuredClone(this.PARAMS)
         this.addDateParamsForMatchesTomorrow(params)
 
-        const rawMatchesData = await MatchAPI.getData(params)
+        const rawMatchesData = await this.matchAPI.getData(params)
+
         const matches = parseUpcomingMatches(rawMatchesData)
 
         await Match.updateAndSaveMatches(matches)

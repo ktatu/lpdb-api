@@ -1,5 +1,5 @@
 import { Job, Queue } from "bullmq"
-import MatchAPI from "../liquipedia_database_api/MatchAPI"
+import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
 import { QueryParams, Team } from "../types"
 import { parseMatchUpdate, parseUpdateMatchJobData } from "./parser"
@@ -23,11 +23,13 @@ class MatchUpdateJob {
     }
 
     private static queue: Queue
+    private static matchAPI: API
 
     private constructor() {}
 
     static initialize(queue: Queue) {
         this.queue = queue
+        this.matchAPI = API.getAPI(APIName.MATCH)
     }
 
     static async execute(job: Job) {
@@ -36,7 +38,8 @@ class MatchUpdateJob {
 
         this.appendParams(params, jobData.match2id, jobData.wiki)
 
-        const rawMatchData = await MatchAPI.getData(params)
+        const rawMatchData = await this.matchAPI.getData(params)
+
         /*
         response can be empty if param condition [[stream::![]]] is not met
         match has no streams -> it should not be displayed in the app

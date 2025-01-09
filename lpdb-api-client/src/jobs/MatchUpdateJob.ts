@@ -33,10 +33,8 @@ class MatchUpdateJob {
     }
 
     static async execute(job: Job) {
-        const jobData = parseUpdateMatchJobData(job.data)
-        const params = structuredClone(this.PARAMS)
-
-        this.appendParams(params, jobData.match2id, jobData.wiki)
+        const { match2id, date, wiki } = parseUpdateMatchJobData(job.data)
+        const params = this.getParams(match2id, wiki)
 
         const rawMatchData = await this.matchAPI.getData(params)
 
@@ -44,24 +42,28 @@ class MatchUpdateJob {
         response can be empty if param condition [[stream::![]]] is not met
         match has no streams -> it should not be displayed in the app
         */
-        if (!rawMatchData || this.matchIsOld(jobData.date)) {
-            await Match.deleteOne({ match2id: jobData.match2id })
+        if (!rawMatchData || this.matchIsOld(date)) {
+            await Match.deleteOne({ match2id: match2id })
             return
         }
 
         const match = parseMatchUpdate(rawMatchData)
 
-        if (this.matchIsDelayed(jobData.date, match.date)) {
+        if (this.matchIsDelayed(date, match.date)) {
             this.enqueueMatchUpdateJob(match.match2id, match.wiki, match.date)
         } else {
             await Match.findOneAndUpdate({ match2id: match.match2id }, match)
-            this.enqueuePlayerStreamsJob(match.match2opponents)
+            this.enqueuePlayerStreamsJob(match.match2opponents, match.wiki)
         }
     }
 
-    private static appendParams(params: QueryParams, match2id: string, wiki: string) {
+    private static getParams(match2id: string, wiki: string) {
+        const params = structuredClone(this.PARAMS)
+
         params.wiki.push(wiki)
         params.conditions.push(`[[match2id::${match2id}]]`)
+
+        return params
     }
 
     // checking if an old match (=likely already over) is being processed for whatever reason
@@ -92,8 +94,8 @@ class MatchUpdateJob {
         return delay
     }
 
-    private static enqueuePlayerStreamsJob(teams: Array<Team>) {
-        this.queue.add("player_streams", teams)
+    private static enqueuePlayerStreamsJob(teams: Array<Team>, wiki: string) {
+        this.queue.add("player_streams", { teams, wiki })
     }
 }
 

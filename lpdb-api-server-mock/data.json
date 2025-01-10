@@ -4,10 +4,29 @@
         "pagename": "monthly_mayhem_5",
         "namespace": 0,
         "match2id": "aaa-111",
-        "date": "2025-02-01 15:30:00",
-        "tournament": "Monthly Mayhem 25",
+        "date": "2025-01-09 01:00:00",
+        "tournament": "Monthly Mayhem 12345",
         "liquipediatier": 1,
-        "shouldnotbefetched": "test2"
+        "shouldnotbefetched": "test2",
+        "match2opponents": [
+            {
+                "name": "deadteam1",
+                "match2players": [
+                    { "name": "player11" },
+                    { "name": "player12" },
+                    { "name": "player13" }
+                ]
+            },
+            {
+                "name": "deadteam2",
+                "match2players": [
+                    { "name": "player21" },
+                    { "name": "player22" },
+                    { "name": "player23" }
+                ]
+            }
+        ],
+        "stream": { "twitch_en_1": "sometwitchstream" }
     },
     {
         "wiki": "counterstrike",
@@ -17,16 +36,45 @@
         "date": "2025-02-01 18:30:00",
         "tournament": "Weekly Cup 5",
         "liquipediatier": 4,
-        "shouldnotbefetched": "test1"
+        "shouldnotbefetched": "test1",
+        "match2opponents": [
+            {
+                "name": "counterteam1",
+                "match2players": [{ "name": "plr11" }, { "name": "plr12" }, { "name": "plr13" }]
+            },
+            {
+                "name": "counterteam2",
+                "match2players": [{ "name": "plr21" }, { "name": "plr22" }, { "name": "plr23" }]
+            }
+        ],
+        "stream": { "twitch_en_1": "stream123" }
     },
     {
-        "wiki": "counterstrike",
-        "pagename": "weekly_cup_6",
+        "wiki": "dota2",
+        "pagename": "weekly_cup_aaaabbbb",
         "namespace": 0,
         "match2id": "new-id-123123",
         "date": "2025-02-10 23:30:00",
         "tournament": "Weekly Cup 000",
         "liquipediatier": 4,
-        "shouldnotbefetched": "test1"
+        "shouldnotbefetched": "test1",
+        "match2opponents": [
+            {
+                "name": "dotateam1",
+                "match2players": [
+                    { "name": "dotaplr11" },
+                    { "name": "dotaplr12" },
+                    { "name": "dotaplr13" }
+                ]
+            },
+            {
+                "name": "dotateam2",
+                "match2players": [
+                    { "name": "dotaplr21" },
+                    { "name": "dotaplr22" },
+                    { "name": "dotaplr23" }
+                ]
+            }
+        ]
     }
 ]

@@ -54,7 +54,7 @@ class JobQueue {
                         break
                     case PlayerStreamsJob.NAME:
                         try {
-                            PlayerStreamsJob.execute()
+                            await PlayerStreamsJob.execute(job)
                         } catch (error) {
                             console.error("Unable to execute job: ", PlayerStreamsJob.NAME)
                             console.error(error)

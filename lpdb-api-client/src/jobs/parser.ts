@@ -59,6 +59,24 @@ export const parseMatchUpdate = (data: unknown) => {
     return matchArray[0] || []
 }
 
+export const parsePlayerStreams = (data: unknown) => {
+    const schema = z.array(
+        z.object({
+            id: z.string(),
+            links: z.object({ twitch: z.string() }).transform((links) => {
+                return links.twitch
+            }),
+        })
+    )
+
+    const parsedPlayers = schema.parse(data)
+    const withRenamedKey = parsedPlayers.map((player) => {
+        return { id: player.id, twitch: player.links }
+    })
+
+    return withRenamedKey
+}
+
 export const parseUpdateMatchJobData = (data: unknown) => {
     const schema = z.object({
         wiki: z.string(),
@@ -67,6 +85,15 @@ export const parseUpdateMatchJobData = (data: unknown) => {
             dateStr.replace(" ", "T").concat("Z")
             return new Date(dateStr)
         }),
+    })
+
+    return schema.parse(data)
+}
+
+export const parsePlayerStreamsJobData = (data: unknown) => {
+    const schema = z.object({
+        wiki: z.string(),
+        players: z.array(z.string()),
     })
 
     return schema.parse(data)

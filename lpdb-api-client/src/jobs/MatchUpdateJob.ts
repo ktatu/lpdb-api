@@ -39,8 +39,7 @@ class MatchUpdateJob {
         const rawMatchData = await this.matchAPI.getData(params)
 
         /*
-        response can be empty if param condition [[stream::![]]] is not met
-        match has no streams -> it should not be displayed in the app
+        rawMatchData can be empty if param condition [[stream::![]]] is not met
         */
         if (!rawMatchData || this.matchIsOld(date)) {
             await Match.deleteOne({ match2id: match2id })
@@ -53,7 +52,7 @@ class MatchUpdateJob {
             this.enqueueMatchUpdateJob(match.match2id, match.wiki, match.date)
         } else {
             await Match.findOneAndUpdate({ match2id: match.match2id }, match)
-            this.enqueuePlayerStreamsJob(match.match2opponents, match.wiki)
+            this.enqueuePlayerStreamsJob(match.match2opponents, match.wiki, match.match2id)
         }
     }
 
@@ -94,8 +93,8 @@ class MatchUpdateJob {
         return delay
     }
 
-    private static enqueuePlayerStreamsJob(teams: Array<Team>, wiki: string) {
-        this.queue.add("player_streams", { teams, wiki })
+    private static enqueuePlayerStreamsJob(teams: Array<Team>, wiki: string, match2id: string) {
+        this.queue.add("player_streams", { teams, wiki, match2id })
     }
 }
 

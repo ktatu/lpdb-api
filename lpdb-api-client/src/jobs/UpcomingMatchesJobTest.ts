@@ -6,14 +6,14 @@ import { IMatch, QueryParams } from "../types"
 import { parseUpcomingMatches } from "./parser"
 
 // Periodically querying the LPDB API for upcoming matches
-class UpcomingMatchesJob {
+class UpcomingMatchesJobTest {
     static readonly NAME = "upcoming_matches"
     private static readonly JOB_RECURRENCE_CRON_PATTERN = "0 0 0 * * *"
     private static readonly PARAMS: QueryParams = {
         wiki: SUPPORTED_WIKIS,
         conditions: ["[[namespace::0]]", "[[dateexact::1]]"],
         datapoints: ["match2id", "date", "tournament", "liquipediatier"],
-        limit: 1000,
+        limit: 10,
     }
 
     private static queue: Queue
@@ -30,7 +30,7 @@ class UpcomingMatchesJob {
 
     static async execute() {
         const params = structuredClone(this.PARAMS)
-        this.addDateParamsForMatches(params)
+        this.addDateParamsForMatchesTomorrow(params)
 
         const rawMatchesData = await this.matchAPI.getData(params)
 
@@ -62,11 +62,10 @@ class UpcomingMatchesJob {
         return delay
     }
 
-    // currently set to find matches for day after tomorrow
-    private static addDateParamsForMatches(params: QueryParams) {
+    private static addDateParamsForMatchesTomorrow(params: QueryParams) {
         const oneDayInMilliseconds = 86400000
-        const dateMin = new Date(Date.now() + oneDayInMilliseconds * 2)
-        const dateMax = new Date(Date.now() + oneDayInMilliseconds * 3)
+        const dateMin = new Date(Date.now())
+        const dateMax = new Date(Date.now() + oneDayInMilliseconds)
 
         const minParam = `[[date::>${dateMin.toISOString()}]]`
         const maxParam = `[[date::<${dateMax.toISOString()}]]`
@@ -82,16 +81,16 @@ class UpcomingMatchesJob {
 
         this.queue.upsertJobScheduler(
             this.NAME,
-            { pattern: this.JOB_RECURRENCE_CRON_PATTERN, limit: 1 },
+            { pattern: this.JOB_RECURRENCE_CRON_PATTERN },
             {
                 name: this.NAME,
             }
         )
-    }
+    } // { every: 86400000, startDate: new Date() }
 
     private static async jobIsInQueue() {
         return Boolean(await this.queue.getJob(this.NAME))
     }
 }
 
-export default UpcomingMatchesJob
+export default UpcomingMatchesJobTest

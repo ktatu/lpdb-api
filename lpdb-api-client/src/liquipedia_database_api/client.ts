@@ -28,6 +28,9 @@ const buildQueryString = (queryParams: Record<string, any>) => {
 
 export const queryApi = async (endpoint: string, queryParams: QueryParams) => {
     try {
+        console.log(
+            `Querying api: ${endpoint}, Date: ${new Date().toUTCString()}, queryparams: ${queryParams} timestamp: ${Date.now()}`
+        )
         const res = await client.get<LPDBResponse>(endpoint, { params: queryParams })
 
         logAdditionalResponseInfo(res.data)

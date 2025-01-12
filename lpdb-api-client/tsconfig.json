@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "ES6",
+        "target": "ES2022",
         "outDir": "./backend_build/",
         "module": "CommonJS",
         "strict": true,

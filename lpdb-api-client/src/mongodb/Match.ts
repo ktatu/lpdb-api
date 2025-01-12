@@ -3,6 +3,13 @@ import { IMatch } from "../types"
 
 interface MatchModel extends Model<IMatch> {
     updateAndSaveMatches(matches: IMatch[]): Promise<void>
+    savePlayerStreams(
+        match2id: string,
+        teamsWithPlayerStreams: Array<{
+            team: string
+            match2players: Array<{ id: string; twitch: string }>
+        }>
+    ): Promise<void>
 }
 
 const schema = new Schema<IMatch, MatchModel>({
@@ -11,9 +18,10 @@ const schema = new Schema<IMatch, MatchModel>({
     tournament: { type: String, required: true },
     wiki: { type: String, required: true },
     pagename: { type: String, required: true },
-    liquipediatier: { type: Number, required: true },
+    liquipediatier: { type: String, required: true },
     match2opponents: { type: [Object] },
     stream: { type: String },
+    teamsWithPlayerStreams: { type: [Object] },
 })
 
 schema.static("updateAndSaveMatches", async function (matches: IMatch[]) {
@@ -27,6 +35,19 @@ schema.static("updateAndSaveMatches", async function (matches: IMatch[]) {
 
     await this.bulkWrite(operations)
 })
+
+schema.static(
+    "savePlayerStreams",
+    async function (
+        match2id: string,
+        teamsWithPlayerStreams: Array<{
+            team: string
+            streams: Array<{ id: string; twitch: string }>
+        }>
+    ) {
+        await this.findOneAndUpdate({ match2id }, { teamsWithPlayerStreams })
+    }
+)
 
 const Match = model<IMatch, MatchModel>("Match", schema)
 

@@ -1,6 +1,6 @@
 export class RateLimiter {
     // Liquipedia rate limit (per endpoint) is 1 request per minute
-    private cooldown: number = 60 //60000
+    private cooldown: number = 60000
     /*
     Date.now() as initial value to prevent the following scenario:
     1. enforceLimit()

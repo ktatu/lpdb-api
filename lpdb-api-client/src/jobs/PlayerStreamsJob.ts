@@ -1,30 +1,8 @@
 import { Job, Queue } from "bullmq"
-import { SUPPORTED_WIKIS } from "../config"
 import API, { APIName } from "../liquipedia_database_api/API"
-import Player from "../mongodb/Player"
-import { QueryParams } from "../types"
+import Match from "../mongodb/Match"
+import { Player, QueryParams, Team } from "../types"
 import { parsePlayerStreams, parsePlayerStreamsJobData } from "./parser"
-
-const testFunc = async () => {
-    const toAdd = [
-        { id: "id1", twitch: "twitch1", wiki: "deadlock" },
-        { id: "id2", twitch: "twitch2", wiki: "deadlock" },
-        { id: "id3", twitch: "twitch3", wiki: "deadlock" },
-    ]
-
-    const first = new Player(toAdd[0])
-    const second = new Player(toAdd[1])
-    const third = new Player(toAdd[2])
-    await first.save()
-    await second.save()
-    await third.save()
-
-    const players = ["id1", "id2"]
-
-    const playersFromDB = await Player.find({ wiki: "deadlock", id: { $in: players } }).lean()
-    const playerIDs = playersFromDB.map((player) => player.id)
-    const playersToQuery = players.filter((player) => playerIDs.includes(player))
-}
 
 class PlayerStreamsJob {
     static NAME = "player_streams"
@@ -35,38 +13,62 @@ class PlayerStreamsJob {
         datapoints: [],
         limit: 100,
     }
-    private static MAX_CACHE_SIZE = 20000
 
     private static queue: Queue
     private static playerAPI: API
-    private static playerCaches: { [key: string]: Set<string> } = {}
 
     private constructor() {}
 
     static async initialize(queue: Queue) {
         this.queue = queue
         this.playerAPI = API.getAPI(APIName.PLAYER)
-
-        //this.createPlayerCaches()
     }
 
     static async execute(job: Job) {
-        const { wiki, players } = parsePlayerStreamsJobData(job.data)
-        const cache = this.playerCaches[wiki]
-        //const players = ["player11", "player12", "player13", "player21", "player22", "player23"]
+        const { wiki, teams, match2id } = parsePlayerStreamsJobData(job.data)
 
-        //const playersToQuery = this.playersNotInCache(cache, players)
+        const teamsWithPlayerStreams = await this.getTeamsWithPlayerStreams(teams, wiki)
 
-        const playersFromDB = await Player.find({ wiki, id: { $in: players } })
-        const playerNames = playersFromDB.map((player) => player.id)
-        const playersToQuery2 = players.filter((player) => playerNames.includes(player))
+        await Match.savePlayerStreams(match2id, teamsWithPlayerStreams)
+    }
 
-        const params = this.getParams(wiki, playersToQuery2)
+    private static async getTeamsWithPlayerStreams(teams: Array<Team>, wiki: string) {
+        const playerIDs = this.getPlayerIDs(teams)
+        const streams = await this.getStreamsFromAPI(wiki, playerIDs)
 
-        //this.manageCache(cache, players)
+        //const streams: Array<{ id: string; twitch: string }> = [
+        //{ id: "player1", twitch: "stream1" },
+        //{ id: "player2", twitch: "stream2" },
+        //{ id: "player3", twitch: "stream3" },
+        //{ id: "player4", twitch: "stream4" },
+        //]
+
+        const streamsMap = this.getStreamMap(streams)
+
+        const teamsWithPlayerStreams = teams.map((team) => {
+            return {
+                team: team.name,
+                match2players: team.match2players.map((player) => {
+                    const stream = streamsMap.get(player) || ""
+                    return { id: player, twitch: stream }
+                }),
+            }
+        })
+
+        return teamsWithPlayerStreams
+    }
+
+    private static getPlayerIDs(teams: Array<Team>) {
+        return teams.flatMap((team) => team.match2players)
+    }
+
+    private static async getStreamsFromAPI(wiki: string, playerIDs: Array<string>) {
+        const params = this.getParams(wiki, playerIDs)
 
         const rawPlayerData = await this.playerAPI.getData(params)
-        const playersWithStreams = parsePlayerStreams(rawPlayerData)
+        const streams = parsePlayerStreams(rawPlayerData)
+
+        return streams
     }
 
     private static getParams(wiki: string, players: Array<string>) {
@@ -79,25 +81,11 @@ class PlayerStreamsJob {
         return params
     }
 
-    private static manageCache(cache: Set<string>, players: Array<string>) {
-        if (cache.size > this.MAX_CACHE_SIZE) {
-            cache.clear()
-        }
+    private static getStreamMap(players: Array<Player>) {
+        const map = new Map<string, string>()
+        players.forEach((player) => map.set(player.id, player.twitch))
 
-        players.forEach((player) => {
-            cache.add(player)
-        })
-    }
-
-    private static playersNotInCache(cache: Set<string>, players: Array<string>) {
-        return players.filter((player) => !cache.has(player))
-    }
-
-    private static createPlayerCaches() {
-        SUPPORTED_WIKIS.forEach((wiki) => {
-            const cache = new Set<string>()
-            this.playerCaches[wiki] = cache
-        })
+        return map
     }
 }
 

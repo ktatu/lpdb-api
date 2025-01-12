@@ -38,6 +38,7 @@ class JobQueue {
                 switch (job.name) {
                     case UpcomingMatchesJob.NAME:
                         try {
+                            console.log("upcoming matches ", new Date().toISOString())
                             await UpcomingMatchesJob.execute()
                         } catch (error) {
                             console.error("Unable to execute job: ", UpcomingMatchesJob.NAME)
@@ -46,6 +47,7 @@ class JobQueue {
                         break
                     case MatchUpdateJob.NAME:
                         try {
+                            console.log("Match update ", new Date().toISOString())
                             await MatchUpdateJob.execute(job)
                         } catch (error) {
                             console.error("Unable to execute job: ", MatchUpdateJob.NAME)
@@ -54,11 +56,17 @@ class JobQueue {
                         break
                     case PlayerStreamsJob.NAME:
                         try {
+                            console.log("Player streams ", new Date().toISOString())
                             await PlayerStreamsJob.execute(job)
                         } catch (error) {
                             console.error("Unable to execute job: ", PlayerStreamsJob.NAME)
                             console.error(error)
                         }
+                        break
+                    case "live_update":
+                        // enqueued in MatchUpdate, delay to match start.
+                        // Start accepting webhook data related to match in live update job data
+                        console.log("live update")
                         break
                     default:
                         break

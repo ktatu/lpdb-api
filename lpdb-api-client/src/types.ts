@@ -17,12 +17,25 @@ export interface IMatch {
     tournament: string
     wiki: string
     pagename: string
-    liquipediatier: number
+    liquipediatier: string
     match2opponents?: Array<Team>
     stream?: string
+    teamsWithPlayerStreams?: Array<{ name: string; streams: Array<Player> }>
 }
 
 export interface Team {
     name: string
     match2players: Array<string>
+}
+
+export interface Player {
+    id: string
+    twitch: string
+}
+
+export interface WebhookData {
+    page: string
+    namespace: number
+    wiki: string
+    event: string
 }

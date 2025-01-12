@@ -13,7 +13,7 @@ export const parseUpcomingMatches = (data: unknown) => {
                 return new Date(dateStr)
             }),
             tournament: z.string(),
-            liquipediatier: z.number(),
+            liquipediatier: z.string(),
         })
     )
 
@@ -31,13 +31,13 @@ export const parseMatchUpdate = (data: unknown) => {
                 return new Date(dateStr)
             }),
             tournament: z.string(),
-            liquipediatier: z.number(),
+            liquipediatier: z.string(),
             match2opponents: z.array(
                 z.object({
                     name: z.string(),
                     match2players: z
-                        .array(z.object({ name: z.string() }))
-                        .transform((players) => players.map((player) => player.name)),
+                        .array(z.object({ displayname: z.string() }))
+                        .transform((players) => players.map((player) => player.displayname)),
                 })
             ),
             stream: z.object({ twitch_en_1: z.string() }).transform((stream) => {
@@ -63,9 +63,17 @@ export const parsePlayerStreams = (data: unknown) => {
     const schema = z.array(
         z.object({
             id: z.string(),
-            links: z.object({ twitch: z.string() }).transform((links) => {
-                return links.twitch
-            }),
+            links: z
+                // because API returns an empty array for links when the queried player has none
+                .array(z.string())
+                .transform((emptyArray) => {
+                    return ""
+                })
+                .or(
+                    z.object({ twitch: z.string() }).transform((links) => {
+                        return links.twitch
+                    })
+                ),
         })
     )
 
@@ -93,7 +101,8 @@ export const parseUpdateMatchJobData = (data: unknown) => {
 export const parsePlayerStreamsJobData = (data: unknown) => {
     const schema = z.object({
         wiki: z.string(),
-        players: z.array(z.string()),
+        teams: z.array(z.object({ name: z.string(), match2players: z.array(z.string()) })),
+        match2id: z.string(),
     })
 
     return schema.parse(data)

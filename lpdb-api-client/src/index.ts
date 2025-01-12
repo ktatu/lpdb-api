@@ -3,7 +3,8 @@ import { connect } from "mongoose"
 import { MONGODB_PASSWORD, MONGODB_URI, MONGODB_USERNAME } from "./config"
 import JobQueue from "./jobs/JobQueue"
 
-const app = express()
+export const app = express()
+app.use(express.json())
 
 const PORT = process.env.PORT || 3003
 

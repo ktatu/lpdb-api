@@ -13,7 +13,7 @@ class UpcomingMatchesJob {
         wiki: SUPPORTED_WIKIS,
         conditions: ["[[namespace::0]]", "[[dateexact::1]]"],
         datapoints: ["match2id", "date", "tournament", "liquipediatier"],
-        limit: 1000,
+        limit: 100,
     }
 
     private static queue: Queue
@@ -46,7 +46,7 @@ class UpcomingMatchesJob {
             const delay = this.calculateUpdateMatchJobDelay(match.date)
             const jobData = { wiki: match.wiki, match2id: match.match2id, date: match.date }
 
-            return new Job(this.queue, "update_match", jobData, {
+            return new Job(this.queue, "match_update", jobData, {
                 delay,
             })
         })
@@ -58,6 +58,7 @@ class UpcomingMatchesJob {
         const oneHourInMilliseconds = 3600000
         const oneHourBeforeMatchStart = date.getTime() - oneHourInMilliseconds
         const delay = oneHourBeforeMatchStart - Date.now()
+        console.log(`match delay (minutes): ${delay / 60000}, `)
 
         return delay
     }
@@ -65,11 +66,17 @@ class UpcomingMatchesJob {
     // currently set to find matches for day after tomorrow
     private static addDateParamsForMatches(params: QueryParams) {
         const oneDayInMilliseconds = 86400000
+        /*
         const dateMin = new Date(Date.now() + oneDayInMilliseconds * 2)
         const dateMax = new Date(Date.now() + oneDayInMilliseconds * 3)
+        */
+        const dateMin = new Date(Date.now())
+        const dateMax = new Date(Date.now() + oneDayInMilliseconds)
 
         const minParam = `[[date::>${dateMin.toISOString()}]]`
         const maxParam = `[[date::<${dateMax.toISOString()}]]`
+        console.log("date min ", minParam)
+        console.log("date max ", maxParam)
 
         params.conditions.push(minParam, maxParam)
     }
@@ -82,7 +89,7 @@ class UpcomingMatchesJob {
 
         this.queue.upsertJobScheduler(
             this.NAME,
-            { pattern: this.JOB_RECURRENCE_CRON_PATTERN, limit: 1 },
+            { pattern: this.JOB_RECURRENCE_CRON_PATTERN },
             {
                 name: this.NAME,
             }

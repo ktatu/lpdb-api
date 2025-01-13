@@ -38,10 +38,8 @@ class MatchUpdateJob {
 
         const rawMatchData = await this.matchAPI.getData(params)
 
-        /*
-        rawMatchData can be empty if param condition [[stream::![]]] is not met
-        */
-        if (!rawMatchData || this.matchIsOld(date)) {
+        // rawMatchData can be empty if param condition [[stream::![]]] is not met
+        if (rawMatchData.length === 0 || this.matchIsOld(date)) {
             await Match.deleteOne({ match2id: match2id })
             return
         }

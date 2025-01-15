@@ -1,4 +1,4 @@
-import { Job, Queue } from "bullmq"
+import { Job } from "bullmq"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
 import { Player, QueryParams, Team } from "../types"
@@ -14,13 +14,11 @@ class PlayerStreamsJob {
         limit: 100,
     }
 
-    private static queue: Queue
     private static playerAPI: API
 
     private constructor() {}
 
-    static async initialize(queue: Queue) {
-        this.queue = queue
+    static async initialize() {
         this.playerAPI = API.getAPI(APIName.PLAYER)
     }
 

@@ -1,8 +1,9 @@
 import { SUPPORTED_WIKIS } from "../config"
+import { defaultDateexact, defaultNamespace } from "../default-params"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
 import { parseUpcomingMatches } from "../parser"
-import { QueryParams } from "../types"
+import { QueryParams, QueryParams2 } from "../types"
 
 // Periodically querying the LPDB API for upcoming matches
 class UpcomingMatchesJob {
@@ -10,6 +11,13 @@ class UpcomingMatchesJob {
     private static readonly PARAMS: QueryParams = {
         wiki: SUPPORTED_WIKIS,
         conditions: ["[[namespace::0]]", "[[dateexact::1]]"],
+        datapoints: ["match2id", "date", "tournament", "liquipediatier"],
+        limit: 100,
+    }
+
+    private static readonly PARAMS2: QueryParams2 = {
+        wiki: ["counterstrike", "deadlock", "dota2"],
+        conditions: [defaultNamespace, defaultDateexact],
         datapoints: ["match2id", "date", "tournament", "liquipediatier"],
         limit: 100,
     }

@@ -52,3 +52,34 @@ export interface ITrackedTourney {
     wiki: string
     matchesByID: Array<string>
 }
+
+// params-related types and interfaces
+
+type wiki = "deadlock" | "counterstrike" | "dota2"
+
+export type condition = {
+    name: datapoint
+    operator: operator
+    value: string
+}
+
+export type operator = ">" | "<" | "=" | "!="
+
+type datapoint =
+    | "date"
+    | "dateexact"
+    | "finished"
+    | "liquipediatier"
+    | "match2id"
+    | "match2opponents"
+    | "namespace"
+    | "stream"
+    | "pagename"
+    | "tournament"
+
+export interface QueryParams2 {
+    wiki: Array<wiki>
+    conditions: Array<condition | Array<condition>>
+    datapoints: Array<datapoint>
+    limit?: number
+}

@@ -1,4 +1,9 @@
+/*
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USERNAME } from "./config"
+import { REDIS_CONNECTION_URL } from "./config"
+import Redis from "ioredis"
+
+const redis = new Redis(REDIS_CONNECTION_URL)
 
 const connection = {
     host: REDIS_HOST,
@@ -8,3 +13,4 @@ const connection = {
 }
 
 export default connection
+*/

@@ -1,8 +1,15 @@
-export interface QueryParams {
+export interface Params {
     wiki: Array<string>
-    conditions: Array<string>
     datapoints: Array<string>
     limit?: number
+}
+
+export interface QueryParams extends Params {
+    conditions: Array<string>
+}
+
+export interface ConditionUnionParams extends Params {
+    conditions: Array<Array<string> | string>
 }
 
 export interface LPDBResponse {
@@ -38,4 +45,10 @@ export interface WebhookData {
     namespace: number
     wiki: string
     event: string
+}
+
+export interface ITrackedTourney {
+    pagename: string
+    wiki: string
+    matchesByID: Array<string>
 }

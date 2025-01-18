@@ -6,11 +6,12 @@ import PlayerStreamsJob from "./PlayerStreamsJob"
 import UpcomingMatchesJob from "./UpcomingMatchesJob"
 
 class JobQueue {
-    private static readonly JOBS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
+    private static readonly JOB_HANDLERS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
+    private static readonly MATCH_LIVE_JOB_NAME = "match_live"
     private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 0 0 * * *"
+    private static readonly QUEUE_NAME = "queue"
 
     private static queue: Queue
-    private static worker: Worker
     private static initialized = false
 
     private constructor() {}
@@ -23,21 +24,21 @@ class JobQueue {
 
         this.initializeQueue()
         this.initializeWorker()
-        this.JOBS.forEach((job) => job.initialize())
+        this.JOB_HANDLERS.forEach((handler) => handler.initialize())
         // might need changes if not checking for upcoming matches job before adding it causes problems
         this.enqueueUpcomingMatchesJob()
     }
 
     private static initializeQueue() {
-        this.queue = new Queue("match", {
+        this.queue = new Queue(this.QUEUE_NAME, {
             connection,
             defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
         })
     }
 
     private static initializeWorker() {
-        this.worker = new Worker(
-            "match",
+        new Worker(
+            this.QUEUE_NAME,
             async (job) => {
                 switch (job.name) {
                     case UpcomingMatchesJob.NAME:
@@ -46,6 +47,7 @@ class JobQueue {
                             matches.forEach((match) => {
                                 this.enqueueMatchUpdateJob(match.match2id, match.wiki, match.date)
                             })
+                            console.log("asd")
                         } catch (error) {
                             console.error("Unable to execute job: ", UpcomingMatchesJob.NAME)
                             console.error(error)
@@ -67,7 +69,12 @@ class JobQueue {
                                     match.wiki,
                                     match.match2id
                                 )
-                                // enqueue live status job
+                                this.enqueueMatchLiveJob(
+                                    match.match2id,
+                                    match.pagename,
+                                    match.wiki,
+                                    match.date
+                                )
                             }
                         } catch (error) {
                             console.error("Unable to execute job: ", MatchUpdateJob.NAME)
@@ -77,7 +84,6 @@ class JobQueue {
 
                     case PlayerStreamsJob.NAME:
                         try {
-                            console.log("Player streams ", new Date().toISOString())
                             await PlayerStreamsJob.execute(job)
                         } catch (error) {
                             console.error("Unable to execute job: ", PlayerStreamsJob.NAME)
@@ -85,19 +91,25 @@ class JobQueue {
                         }
                         break
 
-                    case "live_update":
-                        // enqueued in MatchUpdate, delay to match start.
-                        // Start accepting webhook data related to match in live update job data
-                        console.log("live update")
+                    case this.MATCH_LIVE_JOB_NAME:
+                        try {
+                            //LiveTourneyTracker.addMatch()
+                        } catch (error) {
+                            console.error("Unable to execute job: ", this.MATCH_LIVE_JOB_NAME)
+                            console.error(error)
+                        }
                         break
 
                     default:
+                        console.error(`Job with no matching job class: ${job.name}`)
                         break
                 }
             },
             { connection, concurrency: 100 }
         )
     }
+
+    static enqueueMatchLiveUpdateJob() {}
 
     private static enqueueUpcomingMatchesJob() {
         this.queue.upsertJobScheduler(
@@ -128,6 +140,21 @@ class JobQueue {
 
     private static enqueuePlayerStreamsJob(teams: Array<Team>, wiki: string, match2id: string) {
         this.queue.add(PlayerStreamsJob.NAME, { teams, wiki, match2id })
+    }
+
+    private static enqueueMatchLiveJob(
+        match2id: string,
+        pagename: string,
+        wiki: string,
+        date: Date
+    ) {
+        const delay = this.calculateMatchLiveJobDelay(date)
+
+        this.queue.add(this.MATCH_LIVE_JOB_NAME, { match2id, pagename, wiki }, { delay })
+    }
+
+    private static calculateMatchLiveJobDelay(date: Date) {
+        return date.getTime() - Date.now()
     }
 }
 

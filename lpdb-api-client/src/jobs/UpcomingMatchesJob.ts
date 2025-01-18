@@ -1,8 +1,8 @@
 import { SUPPORTED_WIKIS } from "../config"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
+import { parseUpcomingMatches } from "../parser"
 import { QueryParams } from "../types"
-import { parseUpcomingMatches } from "./parser"
 
 // Periodically querying the LPDB API for upcoming matches
 class UpcomingMatchesJob {
@@ -38,17 +38,11 @@ class UpcomingMatchesJob {
     // currently set to find matches for day after tomorrow
     private static addDateParamsForMatches(params: QueryParams) {
         const oneDayInMilliseconds = 86400000
-        /*
         const dateMin = new Date(Date.now() + oneDayInMilliseconds * 2)
         const dateMax = new Date(Date.now() + oneDayInMilliseconds * 3)
-        */
-        const dateMin = new Date(Date.now())
-        const dateMax = new Date(Date.now() + oneDayInMilliseconds)
 
         const minParam = `[[date::>${dateMin.toISOString()}]]`
         const maxParam = `[[date::<${dateMax.toISOString()}]]`
-        console.log("date min ", minParam)
-        console.log("date max ", maxParam)
 
         params.conditions.push(minParam, maxParam)
     }

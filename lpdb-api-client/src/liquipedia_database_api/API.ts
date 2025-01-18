@@ -1,4 +1,4 @@
-import { QueryParams } from "../types"
+import { Params } from "../types"
 import { queryApi } from "./client"
 import { RateLimiter } from "./RateLimiter"
 
@@ -30,7 +30,7 @@ class API {
         return instance
     }
 
-    async getData(params: QueryParams) {
+    async getData(params: Params) {
         return await this.rateLimiter.limitWrapper(queryApi, this.name, params)
     }
 }

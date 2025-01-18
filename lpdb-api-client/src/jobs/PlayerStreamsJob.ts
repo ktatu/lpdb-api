@@ -1,8 +1,8 @@
 import { Job } from "bullmq"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
+import { parsePlayerStreams, parsePlayerStreamsJobData } from "../parser"
 import { Player, QueryParams, Team } from "../types"
-import { parsePlayerStreams, parsePlayerStreamsJobData } from "./parser"
 
 class PlayerStreamsJob {
     static NAME = "player_streams"
@@ -18,7 +18,7 @@ class PlayerStreamsJob {
 
     private constructor() {}
 
-    static async initialize() {
+    static initialize() {
         this.playerAPI = API.getAPI(APIName.PLAYER)
     }
 
@@ -33,13 +33,6 @@ class PlayerStreamsJob {
     private static async getTeamsWithPlayerStreams(teams: Array<Team>, wiki: string) {
         const playerIDs = this.getPlayerIDs(teams)
         const streams = await this.getStreamsFromAPI(wiki, playerIDs)
-
-        //const streams: Array<{ id: string; twitch: string }> = [
-        //{ id: "player1", twitch: "stream1" },
-        //{ id: "player2", twitch: "stream2" },
-        //{ id: "player3", twitch: "stream3" },
-        //{ id: "player4", twitch: "stream4" },
-        //]
 
         const streamsMap = this.getStreamMap(streams)
 

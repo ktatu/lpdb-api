@@ -20,13 +20,17 @@ export class RateLimiter {
         return queryData
     }
 
-    async enforceLimit() {
+    limitBeingEnforced() {
+        return this.timeSinceLastEnforcement() + this.cooldown > Date.now()
+    }
+
+    private async enforceLimit() {
         const timeoutDuration = Math.max(0, this.timeSinceLastEnforcement())
 
         await new Promise((resolve) => setTimeout(resolve, timeoutDuration))
     }
 
-    setNewEnforcementTimestamp() {
+    private setNewEnforcementTimestamp() {
         this.lastEnforcementTimestamp = Date.now()
     }
 

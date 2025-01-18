@@ -1,8 +1,8 @@
 import { Job } from "bullmq"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
+import { parseMatchUpdate, parseUpdateMatchJobData } from "../parser"
 import { QueryParams } from "../types"
-import { parseMatchUpdate, parseUpdateMatchJobData } from "./parser"
 
 // Querying a specific match from LPDB API to get more datapoints / updated datapoints
 class MatchUpdateJob {

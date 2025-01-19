@@ -14,16 +14,30 @@ const client = axios.create({
 })
 
 const buildQueryString = (queryParams: Record<string, any>) => {
+    const conditions = stringifyConditionValues(queryParams.conditions)
+
     const queryParts = [
         `wiki=${encodeURIComponent(queryParams.wiki.toString().replaceAll(",", "|"))}`,
-        `conditions=${encodeURIComponent(
-            queryParams.conditions.toString().replaceAll(",", " AND ")
-        )}`,
+        `conditions=${encodeURIComponent(conditions.toString().replaceAll(",", " AND "))}`,
         `query=${encodeURIComponent(queryParams.datapoints.toString())}`,
         `limit=${queryParams.limit || 20}`,
     ]
 
     return queryParts.join("&")
+}
+
+const stringifyConditionValues = (conditions: unknown) => {
+    if (!Array.isArray(conditions)) {
+        return []
+    }
+
+    return conditions.reduce((acc: Array<any>, curr) => {
+        if (Array.isArray(curr)) {
+            const stringified = `(${curr.toString().replaceAll(",", " OR ")})`
+            return acc.concat(stringified)
+        }
+        return acc.concat(curr)
+    }, [])
 }
 
 export const queryApi = async (endpoint: string, queryParams: QueryParams) => {

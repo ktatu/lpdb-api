@@ -2,12 +2,12 @@ import { Job } from "bullmq"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
 import { parsePlayerStreams, parsePlayerStreamsJobData } from "../parser"
-import { Player, QueryParams, Team } from "../types"
+import { condition, ConditionUnionParams, Player, Team } from "../types"
 
 class PlayerStreamsJob {
     static NAME = "player_streams"
 
-    private static PARAMS: QueryParams = {
+    private static PARAMS: ConditionUnionParams = {
         wiki: [],
         conditions: ["[[namespace::0]]"],
         datapoints: [],
@@ -64,10 +64,12 @@ class PlayerStreamsJob {
 
     private static getParams(wiki: string, players: Array<string>) {
         const params = structuredClone(this.PARAMS)
-        const playersCondition = players.map((player) => `[[id::${player}]]`).join(" OR ")
+        const playerConditions: Array<condition> = players.map(
+            (player) => `[[id::${player}]]` as condition
+        )
 
         params.wiki.push(wiki)
-        params.conditions.push(playersCondition)
+        params.conditions.push(playerConditions)
 
         return params
     }

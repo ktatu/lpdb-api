@@ -2,7 +2,7 @@ import { HydratedDocument } from "mongoose"
 import API, { APIName } from "./liquipedia_database_api/API"
 import TrackedTourney from "./mongodb/TrackedTourney"
 import { parseMatchStatusesData } from "./parser"
-import { ConditionUnionParams, ITrackedTourney } from "./types"
+import { ConditionUnionParams, ITrackedTourney, condition } from "./types"
 
 class LiveTourneyTracker {
     private static readonly PARAMS: ConditionUnionParams = {
@@ -61,14 +61,15 @@ class LiveTourneyTracker {
         }
     }
 
-    // TODO: separate class for handling params in general
     private static getParams(match2ids: Array<string>, wiki: string) {
-        const idConditionStrings = match2ids.map((id) => `[[match2id::${id}]]`)
-        const condition = `(${idConditionStrings.join(" OR ")})`
-
         const params = structuredClone(this.PARAMS)
+
+        const match2idConditions: Array<condition> = match2ids.map(
+            (id) => `[[match2id::${id}]]` as condition
+        )
+
         params.wiki.push(wiki)
-        params.conditions.push(condition)
+        params.conditions.push(match2idConditions)
 
         return params
     }

@@ -12,7 +12,7 @@ const redis = new IORedis(REDIS_CONNECTION_URL, { maxRetriesPerRequest: null })
 class JobQueue {
     private static readonly JOB_HANDLERS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
     private static readonly MATCH_LIVE_JOB_NAME = "match_live"
-    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 * * * * *"
+    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "24 * * * * *"
     private static readonly QUEUE_NAME = "queue"
 
     private static queue: Queue

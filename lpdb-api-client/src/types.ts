@@ -1,15 +1,33 @@
+type wiki = "deadlock" | "counterstrike" | "dota2"
+type operator = "::" | "::!" | "::>" | "::<"
+type value = string
+type datapoint =
+    | "date"
+    | "dateexact"
+    | "finished"
+    | "id"
+    | "liquipediatier"
+    | "match2id"
+    | "match2opponents"
+    | "namespace"
+    | "stream"
+    | "pagename"
+    | "tournament"
+
+export type condition = `[[${datapoint}${operator}${value}]]`
+
 export interface Params {
     wiki: Array<string>
-    datapoints: Array<string>
+    datapoints: Array<datapoint>
     limit?: number
 }
 
 export interface QueryParams extends Params {
-    conditions: Array<string>
+    conditions: Array<condition>
 }
 
 export interface ConditionUnionParams extends Params {
-    conditions: Array<Array<string> | string>
+    conditions: Array<Array<condition> | condition>
 }
 
 export interface LPDBResponse {
@@ -51,35 +69,4 @@ export interface ITrackedTourney {
     pagename: string
     wiki: string
     matchesByID: Array<string>
-}
-
-// params-related types and interfaces
-
-type wiki = "deadlock" | "counterstrike" | "dota2"
-
-export type condition = {
-    name: datapoint
-    operator: operator
-    value: string
-}
-
-export type operator = ">" | "<" | "=" | "!="
-
-type datapoint =
-    | "date"
-    | "dateexact"
-    | "finished"
-    | "liquipediatier"
-    | "match2id"
-    | "match2opponents"
-    | "namespace"
-    | "stream"
-    | "pagename"
-    | "tournament"
-
-export interface QueryParams2 {
-    wiki: Array<wiki>
-    conditions: Array<condition | Array<condition>>
-    datapoints: Array<datapoint>
-    limit?: number
 }

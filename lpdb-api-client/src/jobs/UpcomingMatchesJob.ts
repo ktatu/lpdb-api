@@ -1,9 +1,8 @@
 import { SUPPORTED_WIKIS } from "../config"
-import { defaultDateexact, defaultNamespace } from "../default-params"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
 import { parseUpcomingMatches } from "../parser"
-import { QueryParams, QueryParams2 } from "../types"
+import { condition, QueryParams } from "../types"
 
 // Periodically querying the LPDB API for upcoming matches
 class UpcomingMatchesJob {
@@ -12,14 +11,7 @@ class UpcomingMatchesJob {
         wiki: SUPPORTED_WIKIS,
         conditions: ["[[namespace::0]]", "[[dateexact::1]]"],
         datapoints: ["match2id", "date", "tournament", "liquipediatier"],
-        limit: 100,
-    }
-
-    private static readonly PARAMS2: QueryParams2 = {
-        wiki: ["counterstrike", "deadlock", "dota2"],
-        conditions: [defaultNamespace, defaultDateexact],
-        datapoints: ["match2id", "date", "tournament", "liquipediatier"],
-        limit: 100,
+        limit: 5,
     }
 
     private static matchAPI: API
@@ -49,8 +41,8 @@ class UpcomingMatchesJob {
         const dateMin = new Date(Date.now() + oneDayInMilliseconds * 2)
         const dateMax = new Date(Date.now() + oneDayInMilliseconds * 3)
 
-        const minParam = `[[date::>${dateMin.toISOString()}]]`
-        const maxParam = `[[date::<${dateMax.toISOString()}]]`
+        const minParam: condition = `[[date::>${dateMin.toISOString()}]]`
+        const maxParam: condition = `[[date::<${dateMax.toISOString()}]]`
 
         params.conditions.push(minParam, maxParam)
     }

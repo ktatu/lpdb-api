@@ -10,7 +10,7 @@ export let REDIS_CONNECTION_URL: string
 let SUPPORTED_WIKIS_STR = ""
 
 if (process.env.ENV === "development") {
-    MONGODB_URI = process.env.MONGODB_URI_DEV as string
+    LPDB_API_KEY = process.env.LPDB_API_KEY_DEV as string
     LPDB_API_URL = process.env.LPDB_API_URL_DEV as string
     MONGODB_URI = process.env.MONGODB_URI_DEV as string
     MONGODB_USERNAME = process.env.MONGODB_USERNAME_DEV as string
@@ -19,7 +19,7 @@ if (process.env.ENV === "development") {
 
     SUPPORTED_WIKIS_STR = process.env.SUPPORTED_WIKIS_DEV as string
 } else if (process.env.ENV === "production") {
-    MONGODB_URI = process.env.MONGODB_URI_PROD as string
+    LPDB_API_KEY = process.env.LPDB_API_KEY_PROD as string
     LPDB_API_URL = process.env.LPDB_API_URL_PROD as string
     MONGODB_URI = process.env.MONGODB_URI_PROD as string
     MONGODB_USERNAME = process.env.MONGODB_USERNAME_PROD as string

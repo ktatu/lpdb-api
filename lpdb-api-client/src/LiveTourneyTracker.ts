@@ -64,9 +64,10 @@ class LiveTourneyTracker {
     private static getParams(match2ids: Array<string>, wiki: string) {
         const params = structuredClone(this.PARAMS)
 
-        const match2idConditions: Array<condition> = match2ids.map(
-            (id) => `[[match2id::${id}]]` as condition
-        )
+        const match2idConditions: Array<condition> = match2ids.map((id) => {
+            const condition: condition = `[[match2id::${id}]]`
+            return condition
+        })
 
         params.wiki.push(wiki)
         params.conditions.push(match2idConditions)

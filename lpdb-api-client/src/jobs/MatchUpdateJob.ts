@@ -1,4 +1,3 @@
-import { Job } from "bullmq"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
 import { parseMatchUpdate, parseUpdateMatchJobData } from "../parser"
@@ -30,8 +29,8 @@ class MatchUpdateJob {
         this.matchAPI = API.getAPI(APIName.MATCH)
     }
 
-    static async execute(job: Job) {
-        const { match2id, date, wiki } = parseUpdateMatchJobData(job.data)
+    static async execute(data: unknown) {
+        const { match2id, date, wiki } = parseUpdateMatchJobData(data)
         const params = this.getParams(match2id, wiki)
 
         const rawMatchData = await this.matchAPI.getData(params)

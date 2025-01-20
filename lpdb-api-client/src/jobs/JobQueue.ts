@@ -29,7 +29,7 @@ class JobQueue {
         this.initializeQueue()
         this.initializeWorker()
         this.JOB_HANDLERS.forEach((handler) => handler.initialize())
-        // might need changes if not checking for upcoming matches job before adding it causes problems
+
         this.enqueueUpcomingMatchesJob()
     }
 
@@ -60,7 +60,7 @@ class JobQueue {
 
                     case MatchUpdateJob.NAME:
                         try {
-                            const { match, matchIsDelayed } = await MatchUpdateJob.execute(job)
+                            const { match, matchIsDelayed } = await MatchUpdateJob.execute(job.data)
                             if (!match) {
                                 break
                             }
@@ -112,8 +112,6 @@ class JobQueue {
             { connection: redis, concurrency: 100 }
         )
     }
-
-    static enqueueMatchLiveUpdateJob() {}
 
     private static enqueueUpcomingMatchesJob() {
         this.queue.upsertJobScheduler(

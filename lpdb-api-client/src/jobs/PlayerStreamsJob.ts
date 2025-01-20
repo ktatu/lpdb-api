@@ -64,9 +64,10 @@ class PlayerStreamsJob {
 
     private static getParams(wiki: string, players: Array<string>) {
         const params = structuredClone(this.PARAMS)
-        const playerConditions: Array<condition> = players.map(
-            (player) => `[[id::${player}]]` as condition
-        )
+        const playerConditions: Array<condition> = players.map((player) => {
+            const condition: condition = `[[id::${player}]]`
+            return condition
+        })
 
         params.wiki.push(wiki)
         params.conditions.push(playerConditions)

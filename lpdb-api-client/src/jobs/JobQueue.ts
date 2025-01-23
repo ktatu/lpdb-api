@@ -1,6 +1,7 @@
 import { Queue, Worker } from "bullmq"
 import IORedis from "ioredis"
 import { REDIS_CONNECTION_URL } from "../config"
+import { parseUpdateMatchJobData } from "../parsers"
 import { Team } from "../types"
 import MatchUpdateJob from "./MatchUpdateJob"
 import PlayerStreamsJob from "./PlayerStreamsJob"
@@ -12,7 +13,7 @@ const redis = new IORedis(REDIS_CONNECTION_URL, { maxRetriesPerRequest: null })
 class JobQueue {
     private static readonly JOB_HANDLERS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
     private static readonly MATCH_LIVE_JOB_NAME = "match_live"
-    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "24 * * * * *"
+    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 46 * * * *"
     private static readonly QUEUE_NAME = "queue"
 
     private static queue: Queue
@@ -48,10 +49,10 @@ class JobQueue {
                     case UpcomingMatchesJob.NAME:
                         try {
                             const matches = await UpcomingMatchesJob.execute()
+                            console.log("execute upcoming matches job done")
                             matches.forEach((match) => {
                                 this.enqueueMatchUpdateJob(match.match2id, match.wiki, match.date)
                             })
-                            console.log("asd")
                         } catch (error) {
                             console.error("Unable to execute job: ", UpcomingMatchesJob.NAME)
                             console.error(error)
@@ -60,26 +61,24 @@ class JobQueue {
 
                     case MatchUpdateJob.NAME:
                         try {
-                            const { match, matchIsDelayed } = await MatchUpdateJob.execute(job.data)
-                            if (!match) {
-                                break
-                            }
+                            const parsedMatchData = parseUpdateMatchJobData(job.data)
+                            const match = await MatchUpdateJob.execute(
+                                parsedMatchData.match2id,
+                                parsedMatchData.date,
+                                parsedMatchData.wiki
+                            )
 
-                            if (matchIsDelayed) {
-                                this.enqueueMatchUpdateJob(match.match2id, match.wiki, match.date)
-                            } else {
-                                this.enqueuePlayerStreamsJob(
-                                    match.match2opponents,
-                                    match.wiki,
-                                    match.match2id
-                                )
-                                this.enqueueMatchLiveJob(
-                                    match.match2id,
-                                    match.pagename,
-                                    match.wiki,
-                                    match.date
-                                )
-                            }
+                            this.enqueuePlayerStreamsJob(
+                                match.match2opponents,
+                                match.wiki,
+                                match.match2id
+                            )
+                            this.enqueueMatchLiveJob(
+                                match.match2id,
+                                match.pagename,
+                                match.wiki,
+                                match.date
+                            )
                         } catch (error) {
                             console.error("Unable to execute job: ", MatchUpdateJob.NAME)
                             console.error(error)
@@ -89,6 +88,7 @@ class JobQueue {
                     case PlayerStreamsJob.NAME:
                         try {
                             await PlayerStreamsJob.execute(job)
+                            console.log("execute player streams job done")
                         } catch (error) {
                             console.error("Unable to execute job: ", PlayerStreamsJob.NAME)
                             console.error(error)
@@ -98,6 +98,7 @@ class JobQueue {
                     case this.MATCH_LIVE_JOB_NAME:
                         try {
                             //LiveTourneyTracker.addMatch()
+                            console.log("add match to live tracking")
                         } catch (error) {
                             console.error("Unable to execute job: ", this.MATCH_LIVE_JOB_NAME)
                             console.error(error)
@@ -109,14 +110,14 @@ class JobQueue {
                         break
                 }
             },
-            { connection: redis, concurrency: 100 }
+            { connection: redis }
         )
     }
 
     private static enqueueUpcomingMatchesJob() {
         this.queue.upsertJobScheduler(
             UpcomingMatchesJob.NAME,
-            { pattern: this.UPCOMING_MATCHES_CRON_PATTERN },
+            { pattern: this.UPCOMING_MATCHES_CRON_PATTERN, limit: 1 },
             {
                 name: UpcomingMatchesJob.NAME,
             }
@@ -133,9 +134,9 @@ class JobQueue {
     }
 
     private static calculateMatchUpdateJobDelay(date: Date) {
-        const oneHourInMilliseconds = 3600000
-        const oneHourBeforeMatchStart = date.getTime() - oneHourInMilliseconds
-        const delay = oneHourBeforeMatchStart - Date.now()
+        const tenMinutesInMilliseconds = 600000
+        const tenMinutesBeforeMatchStart = date.getTime() - tenMinutesInMilliseconds
+        const delay = tenMinutesBeforeMatchStart - Date.now()
 
         return delay
     }

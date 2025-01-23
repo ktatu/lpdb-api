@@ -6,6 +6,7 @@ type datapoint =
     | "dateexact"
     | "finished"
     | "id"
+    | "links"
     | "liquipediatier"
     | "match2id"
     | "match2opponents"
@@ -36,6 +37,8 @@ export interface LPDBResponse {
     warning?: Array<string>
 }
 
+// TODO: split the interface into different parts to match the different phases data goes through with jobs
+// UpcomingMatch -> UpdatedMatch -> IMatch(?)
 export interface IMatch {
     match2id: string
     date: Date

@@ -13,7 +13,7 @@ const redis = new IORedis(REDIS_CONNECTION_URL, { maxRetriesPerRequest: null })
 class JobQueue {
     private static readonly JOB_HANDLERS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
     private static readonly MATCH_LIVE_JOB_NAME = "match_live"
-    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 46 * * * *"
+    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 35 * * * *"
     private static readonly QUEUE_NAME = "queue"
 
     private static queue: Queue
@@ -49,7 +49,6 @@ class JobQueue {
                     case UpcomingMatchesJob.NAME:
                         try {
                             const matches = await UpcomingMatchesJob.execute()
-                            console.log("execute upcoming matches job done")
                             matches.forEach((match) => {
                                 this.enqueueMatchUpdateJob(match.match2id, match.wiki, match.date)
                             })
@@ -62,11 +61,15 @@ class JobQueue {
                     case MatchUpdateJob.NAME:
                         try {
                             const parsedMatchData = parseUpdateMatchJobData(job.data)
+
                             const match = await MatchUpdateJob.execute(
                                 parsedMatchData.match2id,
-                                parsedMatchData.date,
                                 parsedMatchData.wiki
                             )
+
+                            if (!match) {
+                                break
+                            }
 
                             this.enqueuePlayerStreamsJob(
                                 match.match2opponents,

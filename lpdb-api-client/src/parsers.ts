@@ -48,15 +48,7 @@ export const parseMatchUpdate = (data: unknown) => {
 
     const matchArray = schema.parse(data)
 
-    // should never happen because MatchUpdate has param condition of limiting num of results to 1
-    if (matchArray.length > 1) {
-        throw new Error(
-            `Parse match update: unexpected number of matches. Expected 1, was: ${matchArray.length}`
-        )
-    }
-
-    // empty array is checked for in MatchUpdateJob
-    return matchArray[0] || []
+    return matchArray[0] || undefined
 }
 
 export const parsePlayerStreams = (data: unknown) => {

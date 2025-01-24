@@ -28,10 +28,16 @@ class MatchUpdateJob {
         this.matchAPI = API.getAPI(APIName.MATCH)
     }
 
-    static async execute(match2id: string, date: Date, wiki: string) {
+    static async execute(match2id: string, wiki: string) {
         const params = this.getParams(match2id, wiki)
         const rawMatchData = await this.matchAPI.getData(params)
+
         const match = parseMatchUpdate(rawMatchData)
+
+        if (!match) {
+            return undefined
+        }
+
         this.validateMatch(match)
 
         return match

@@ -39,7 +39,7 @@ export interface LPDBResponse {
 
 // TODO: split the interface into different parts to match the different phases data goes through with jobs
 // UpcomingMatch -> UpdatedMatch -> IMatch(?)
-export interface IMatch {
+export interface Match {
     match2id: string
     date: Date
     tournament: string
@@ -68,7 +68,7 @@ export interface WebhookData {
     event: string
 }
 
-export interface ITrackedTourney {
+export interface TrackedTourney {
     pagename: string
     wiki: string
     matchesByID: Array<string>

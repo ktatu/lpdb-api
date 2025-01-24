@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose"
-import { ITrackedTourney } from "../types"
+import { TrackedTourney as ITrackedTourney } from "../types"
 
 const schema = new Schema<ITrackedTourney>({
     matchesByID: { type: [String], required: true },

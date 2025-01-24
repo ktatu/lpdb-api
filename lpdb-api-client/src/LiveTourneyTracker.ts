@@ -2,7 +2,7 @@ import { HydratedDocument } from "mongoose"
 import API, { APIName } from "./liquipedia_database_api/API"
 import TrackedTourney from "./mongodb/TrackedTourney"
 import { parseMatchStatusesData } from "./parsers"
-import { ConditionUnionParams, ITrackedTourney, condition } from "./types"
+import { ConditionUnionParams, TrackedTourney as ITrackedTourney, condition } from "./types"
 
 class LiveTourneyTracker {
     private static readonly PARAMS: ConditionUnionParams = {

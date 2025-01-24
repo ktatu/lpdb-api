@@ -1,5 +1,5 @@
 import { Model, model, Schema } from "mongoose"
-import { IMatch } from "../types"
+import { Match as IMatch } from "../types"
 
 interface MatchModel extends Model<IMatch> {
     updateAndSaveMatches(matches: IMatch[]): Promise<void>

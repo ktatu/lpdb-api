@@ -1,7 +1,7 @@
 import { Job } from "bullmq"
 import API, { APIName } from "../liquipedia_database_api/API"
 import Match from "../mongodb/Match"
-import { parsePlayerStreams, parsePlayerStreamsJobData } from "../parser"
+import { parsePlayerStreams, parsePlayerStreamsJobData } from "../parsers"
 import { condition, ConditionUnionParams, Player, Team } from "../types"
 
 class PlayerStreamsJob {
@@ -10,8 +10,8 @@ class PlayerStreamsJob {
     private static PARAMS: ConditionUnionParams = {
         wiki: [],
         conditions: ["[[namespace::0]]"],
-        datapoints: [],
-        limit: 100,
+        datapoints: ["links", "id"],
+        limit: 200,
     }
 
     private static playerAPI: API

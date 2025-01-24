@@ -1,7 +1,6 @@
 import API, { APIName } from "../liquipedia_database_api/API"
-import Match from "../mongodb/Match"
-import { parseMatchUpdate, parseUpdateMatchJobData } from "../parser"
-import { QueryParams } from "../types"
+import { parseMatchUpdate } from "../parsers"
+import { Match, QueryParams, Team } from "../types"
 
 // Querying a specific match from LPDB API to get more datapoints / updated datapoints
 class MatchUpdateJob {
@@ -29,23 +28,13 @@ class MatchUpdateJob {
         this.matchAPI = API.getAPI(APIName.MATCH)
     }
 
-    static async execute(data: unknown) {
-        const { match2id, date, wiki } = parseUpdateMatchJobData(data)
+    static async execute(match2id: string, date: Date, wiki: string) {
         const params = this.getParams(match2id, wiki)
-
         const rawMatchData = await this.matchAPI.getData(params)
-
-        // rawMatchData can be empty if param condition [[stream::![]]] is not met
-        if (rawMatchData.length === 0 || this.matchIsOld(date)) {
-            await Match.deleteOne({ match2id: match2id })
-            return { match: null, matchIsDelayed: null }
-        }
-
         const match = parseMatchUpdate(rawMatchData)
+        this.validateMatch(match)
 
-        await Match.findOneAndUpdate({ match2id: match.match2id }, match)
-
-        return { match, matchIsDelayed: this.matchIsDelayed(date, match.date) }
+        return match
     }
 
     private static getParams(match2id: string, wiki: string) {
@@ -57,15 +46,28 @@ class MatchUpdateJob {
         return params
     }
 
-    // checking if an old match (=likely already over) is being processed for whatever reason
+    private static validateMatch(match: Match) {
+        if (this.matchIsOld(match.date)) {
+            throw new Error("match is old")
+        }
+        if (this.teamDataIsMissing(match.match2opponents as Array<Team>)) {
+            throw new Error("match is missing team information")
+        }
+    }
+
     private static matchIsOld(matchDate: Date) {
         return Date.now() > matchDate.getTime()
     }
 
-    private static matchIsDelayed(dateFromJobData: Date, dateFromAPI: Date) {
-        // if the match is delayed by an hour or less then match data probably won't change again
-        const oneHourInMilliseconds = 3600000
-        return dateFromJobData.getTime() + oneHourInMilliseconds <= dateFromAPI.getTime()
+    private static teamDataIsMissing(teams: Array<Team>) {
+        let dataMissing = false
+        teams.forEach((team) => {
+            if (!Boolean(team.name) || team.match2players.length === 0) {
+                dataMissing = true
+            }
+        })
+
+        return dataMissing
     }
 }
 

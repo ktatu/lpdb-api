@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "outDir": "./backend_build/",
+        "outDir": "./build/",
         "module": "CommonJS",
         "strict": true,
         "noImplicitReturns": true,

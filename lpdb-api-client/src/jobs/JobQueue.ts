@@ -1,6 +1,7 @@
 import { Queue, Worker } from "bullmq"
 import IORedis from "ioredis"
 import { REDIS_CONNECTION_URL } from "../config"
+import LiveTourneyTracker from "../LiveTourneyTracker"
 import { parseUpdateMatchJobData } from "../parsers"
 import { Team } from "../types"
 import MatchUpdateJob from "./MatchUpdateJob"
@@ -13,7 +14,7 @@ const redis = new IORedis(REDIS_CONNECTION_URL, { maxRetriesPerRequest: null })
 class JobQueue {
     private static readonly JOB_HANDLERS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
     private static readonly MATCH_LIVE_JOB_NAME = "match_live"
-    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 35 * * * *"
+    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 13 * * * *"
     private static readonly QUEUE_NAME = "queue"
 
     private static queue: Queue
@@ -47,19 +48,16 @@ class JobQueue {
             async (job) => {
                 switch (job.name) {
                     case UpcomingMatchesJob.NAME:
-                        try {
+                        await this.tryJobWrapper(UpcomingMatchesJob.NAME, async () => {
                             const matches = await UpcomingMatchesJob.execute()
                             matches.forEach((match) => {
                                 this.enqueueMatchUpdateJob(match.match2id, match.wiki, match.date)
                             })
-                        } catch (error) {
-                            console.error("Unable to execute job: ", UpcomingMatchesJob.NAME)
-                            console.error(error)
-                        }
+                        })
                         break
 
                     case MatchUpdateJob.NAME:
-                        try {
+                        await this.tryJobWrapper(MatchUpdateJob.NAME, async () => {
                             const parsedMatchData = parseUpdateMatchJobData(job.data)
 
                             const match = await MatchUpdateJob.execute(
@@ -68,7 +66,7 @@ class JobQueue {
                             )
 
                             if (!match) {
-                                break
+                                return
                             }
 
                             this.enqueuePlayerStreamsJob(
@@ -82,30 +80,19 @@ class JobQueue {
                                 match.wiki,
                                 match.date
                             )
-                        } catch (error) {
-                            console.error("Unable to execute job: ", MatchUpdateJob.NAME)
-                            console.error(error)
-                        }
+                        })
                         break
 
                     case PlayerStreamsJob.NAME:
-                        try {
+                        await this.tryJobWrapper(PlayerStreamsJob.NAME, async () => {
                             await PlayerStreamsJob.execute(job)
-                            console.log("execute player streams job done")
-                        } catch (error) {
-                            console.error("Unable to execute job: ", PlayerStreamsJob.NAME)
-                            console.error(error)
-                        }
+                        })
                         break
 
                     case this.MATCH_LIVE_JOB_NAME:
-                        try {
-                            //LiveTourneyTracker.addMatch()
-                            console.log("add match to live tracking")
-                        } catch (error) {
-                            console.error("Unable to execute job: ", this.MATCH_LIVE_JOB_NAME)
-                            console.error(error)
-                        }
+                        await this.tryJobWrapper(this.MATCH_LIVE_JOB_NAME, async () => {
+                            await LiveTourneyTracker.addMatch("1", "2", "3")
+                        })
                         break
 
                     default:
@@ -115,6 +102,15 @@ class JobQueue {
             },
             { connection: redis }
         )
+    }
+
+    private static async tryJobWrapper(jobName: string, executeJob: () => Promise<void>) {
+        try {
+            await executeJob()
+        } catch (error) {
+            console.error("Unable to execute job: ", jobName)
+            console.error(error)
+        }
     }
 
     private static enqueueUpcomingMatchesJob() {

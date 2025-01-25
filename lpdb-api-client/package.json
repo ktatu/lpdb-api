@@ -6,7 +6,7 @@
         "tsc": "tsc",
         "start:devwatch": "tsx --watch ./src/index.ts",
         "start:dev": "ENV=development tsx ./src/index.ts",
-        "start:prod": "ENV=production tsx ./src/index.ts"
+        "start:prod": "ENV=production node ./build/index.js"
     },
     "author": "",
     "license": "ISC",

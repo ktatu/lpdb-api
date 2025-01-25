@@ -52,7 +52,6 @@ export const parseMatchUpdate = (data: unknown) => {
 }
 
 export const parsePlayerStreams = (data: unknown) => {
-    console.log("DATA IN PARSE PLAYER STREAMS ", data)
     const schema = z.array(
         z.object({
             id: z.string(),

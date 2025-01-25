@@ -49,6 +49,7 @@ export interface Match {
     match2opponents?: Array<Team>
     stream?: string
     teamsWithPlayerStreams?: Array<{ name: string; streams: Array<Player> }>
+    expireAt?: Date
 }
 
 export interface Team {

@@ -22,6 +22,7 @@ const schema = new Schema<IMatch, MatchModel>({
     match2opponents: { type: [Object] },
     stream: { type: String },
     teamsWithPlayerStreams: { type: [Object] },
+    expireAt: { type: Date, expires: 604800 }, // 7 days
 })
 
 schema.static("updateAndSaveMatches", async function (matches: IMatch[]) {

@@ -2,7 +2,7 @@ import { Queue, Worker } from "bullmq"
 import IORedis from "ioredis"
 import { REDIS_CONNECTION_URL } from "../config"
 import LiveTourneyTracker from "../LiveTourneyTracker"
-import { parseUpdateMatchJobData } from "../parsers"
+import { parseMatchLiveJobData, parseUpdateMatchJobData } from "../parsers"
 import { Team } from "../types"
 import MatchUpdateJob from "./MatchUpdateJob"
 import PlayerStreamsJob from "./PlayerStreamsJob"
@@ -14,7 +14,7 @@ const redis = new IORedis(REDIS_CONNECTION_URL, { maxRetriesPerRequest: null })
 class JobQueue {
     private static readonly JOB_HANDLERS = [MatchUpdateJob, UpcomingMatchesJob, PlayerStreamsJob]
     private static readonly MATCH_LIVE_JOB_NAME = "match_live"
-    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 13 * * * *"
+    private static readonly UPCOMING_MATCHES_CRON_PATTERN = "0 0 0 * * *"
     private static readonly QUEUE_NAME = "queue"
 
     private static queue: Queue
@@ -74,12 +74,7 @@ class JobQueue {
                                 match.wiki,
                                 match.match2id
                             )
-                            this.enqueueMatchLiveJob(
-                                match.match2id,
-                                match.pagename,
-                                match.wiki,
-                                match.date
-                            )
+                            this.enqueueMatchLiveJob(match.match2id, match.pagename, match.wiki)
                         })
                         break
 
@@ -91,7 +86,8 @@ class JobQueue {
 
                     case this.MATCH_LIVE_JOB_NAME:
                         await this.tryJobWrapper(this.MATCH_LIVE_JOB_NAME, async () => {
-                            await LiveTourneyTracker.addMatch("1", "2", "3")
+                            const { wiki, match2id, pagename } = parseMatchLiveJobData(job.data)
+                            await LiveTourneyTracker.addMatch(pagename, wiki, match2id)
                         })
                         break
 
@@ -100,7 +96,7 @@ class JobQueue {
                         break
                 }
             },
-            { connection: redis }
+            { connection: redis } // need to test out setting concurrency
         )
     }
 
@@ -144,15 +140,8 @@ class JobQueue {
         this.queue.add(PlayerStreamsJob.NAME, { teams, wiki, match2id })
     }
 
-    private static enqueueMatchLiveJob(
-        match2id: string,
-        pagename: string,
-        wiki: string,
-        date: Date
-    ) {
-        const delay = this.calculateMatchLiveJobDelay(date)
-
-        this.queue.add(this.MATCH_LIVE_JOB_NAME, { match2id, pagename, wiki }, { delay })
+    private static enqueueMatchLiveJob(match2id: string, pagename: string, wiki: string) {
+        this.queue.add(this.MATCH_LIVE_JOB_NAME, { match2id, pagename, wiki })
     }
 
     private static calculateMatchLiveJobDelay(date: Date) {

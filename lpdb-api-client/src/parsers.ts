@@ -100,6 +100,16 @@ export const parsePlayerStreamsJobData = (data: unknown) => {
     return schema.parse(data)
 }
 
+export const parseMatchLiveJobData = (data: unknown) => {
+    const schema = z.object({
+        wiki: z.string(),
+        match2id: z.string(),
+        pagename: z.string(),
+    })
+
+    return schema.parse(data)
+}
+
 export const parseMatchStatusesData = (data: unknown) => {
     const schema = z.array(
         z.object({

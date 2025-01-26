@@ -14,8 +14,9 @@ app.listen(PORT, async () => {
     try {
         await connect(MONGODB_URI, { user: MONGODB_USERNAME, pass: MONGODB_PASSWORD })
         console.log("Connected to mongodb")
-    } catch (err: unknown) {
+    } catch (error) {
         console.log("Failed connecting to mongodb")
+        console.log(error)
     }
 
     JobQueue.initialize()

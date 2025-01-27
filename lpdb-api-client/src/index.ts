@@ -2,9 +2,16 @@ import express from "express"
 import { connect } from "mongoose"
 import { MONGODB_PASSWORD, MONGODB_URI, MONGODB_USERNAME } from "./config"
 import JobQueue from "./jobs/JobQueue"
+import { router as webhook } from "./webhook"
 
 export const app = express()
 app.use(express.json())
+
+app.get("/healthcheck", (req, res) => {
+    res.sendStatus(200)
+})
+
+app.use("/", webhook)
 
 const PORT = process.env.PORT || 3003
 

@@ -1,17 +1,24 @@
+import { Router } from "express"
 import { z } from "zod"
 import { SUPPORTED_WIKIS } from "./config"
-import { app } from "./index"
 import LiveTourneyTracker from "./LiveTourneyTracker"
 import { WebhookData } from "./types"
 
-app.post("/", (req, res) => {
-    const parsedData = parseWebhookData(req.body)
+export const router = Router()
 
-    if (isPayloadForTourney(parsedData)) {
-        LiveTourneyTracker.tourneyUpdate(parsedData.wiki, parsedData.page)
+router.post("/", (req, res) => {
+    try {
+        const parsedData = parseWebhookData(req.body)
+        if (isPayloadForTourney(parsedData)) {
+            LiveTourneyTracker.tourneyUpdate(parsedData.wiki, parsedData.page)
+        }
+
+        res.sendStatus(200)
+    } catch (error) {
+        console.error("malformatted data in webhook")
+        console.error(error)
+        res.sendStatus(400)
     }
-
-    res.sendStatus(200)
 })
 
 const parseWebhookData = (data: unknown) => {

@@ -23,6 +23,7 @@ app.get("/healthcheck", (req, res) => {
 })
 
 app.get("/match", (req, res) => {
+    console.log("/match query")
     if (rateLimitEnabled && rateLimitIsReached()) {
         console.log("too many requests")
         return res.status(429).json({ error: ["Rate limit exceeded"] })
@@ -39,6 +40,8 @@ app.get("/match", (req, res) => {
 
     res.json(matches)
 })
+
+app.get("/player", (req, res) => {})
 
 const rateLimitIsReached = () => {
     const timestampNow = Date.now()

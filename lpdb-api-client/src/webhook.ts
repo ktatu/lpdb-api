@@ -12,7 +12,7 @@ router.post("/", (req, res) => {
         if (isPayloadForTourney(parsedData)) {
             LiveTourneyTracker.tourneyUpdate(parsedData.wiki, parsedData.page)
         }
-
+        console.log("webhook data ", parsedData)
         res.sendStatus(200)
     } catch (error) {
         console.error("malformatted data in webhook")

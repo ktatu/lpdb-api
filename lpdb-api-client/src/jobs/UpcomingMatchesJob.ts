@@ -38,10 +38,8 @@ class UpcomingMatchesJob {
     // currently set to find matches for day after tomorrow
     private static addDateParamsForMatches(params: QueryParams) {
         const oneDayInMilliseconds = 86400000
-        //const dateMin = new Date(Date.now() + oneDayInMilliseconds * 2)
-        //const dateMax = new Date(Date.now() + oneDayInMilliseconds * 3)
-        const dateMin = new Date(Date.now())
-        const dateMax = new Date(Date.now() + oneDayInMilliseconds)
+        const dateMin = new Date(Date.now() + oneDayInMilliseconds * 2)
+        const dateMax = new Date(Date.now() + oneDayInMilliseconds * 3)
 
         const minParam: condition = `[[date::>${dateMin.toISOString()}]]`
         const maxParam: condition = `[[date::<${dateMax.toISOString()}]]`

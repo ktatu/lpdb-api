@@ -112,7 +112,7 @@ class JobQueue {
     private static enqueueUpcomingMatchesJob() {
         this.queue.upsertJobScheduler(
             UpcomingMatchesJob.NAME,
-            { pattern: this.UPCOMING_MATCHES_CRON_PATTERN, limit: 1 },
+            { pattern: this.UPCOMING_MATCHES_CRON_PATTERN },
             {
                 name: UpcomingMatchesJob.NAME,
             }
